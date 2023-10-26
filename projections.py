@@ -1,16 +1,10 @@
-import ANNarchy as ann
-import itertools
-
-def rangeX(iterations):
-    """
-    Multidimensional iterator using all possible combinations within the given
-    boundaries e.g. rangeX((2,3)) => 00 01 02 10 11 12
-    """
-    if not isinstance(iterations,  tuple | list):
-        raise AttributeError('Input should be a tuple or a list!')
-    return itertools.product(*map(range, iterations))
-
 def STN_GPi_connection(preDim, postDim, weight=1.0):
+    '''
+    Returns a connection matrix usable in ANNarchy.
+    The idea behind this connection is, that every pre-synaptic neuron i connects with every post-synaptic
+    neuron j which do not map the features as neuron i:
+    if i == j: w(ij) = None; else: w = [weight]
+    '''
     import numpy as np
 
     if not isinstance(postDim,  tuple | list):

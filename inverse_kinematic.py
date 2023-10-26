@@ -146,14 +146,14 @@ def touch_joint(starting_joint_angles,
         plt.show()
 
 
-def distance(starting_joint_angles,
-             resting_joint_angles,
-             resting_arm,
-             joint_to_touch, # 0 = head -> shoulder; 1 = shoulder -> elbow; 2 = elbow -> hand
-             num,
-             radians=True,
-             do_plot=False,
-             delta_shoulder=0):
+def check_relation_statespace_jointangles(starting_joint_angles,
+                                          resting_joint_angles,
+                                          resting_arm,
+                                          joint_to_touch, # 0 = head -> shoulder; 1 = shoulder -> elbow; 2 = elbow -> hand
+                                          num,
+                                          radians=True,
+                                          do_plot=False,
+                                          delta_shoulder=0):
 
     x_space = np.linspace(0,1, num)
 
@@ -175,7 +175,6 @@ def distance(starting_joint_angles,
 
     joint_angles = np.array(joint_angles)
     diff_angles = joint_angles[1:, :] - joint_angles[:-1, :]
-
 
     import matplotlib.pyplot as plt
 

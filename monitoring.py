@@ -1,10 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Mar 26 16:56:26 2021
-
-@author: E. Syniawa
-"""
 import ANNarchy as ann
 import numpy as np
 from os import path, makedirs
@@ -26,7 +19,7 @@ class Pop_Monitor(object):
         for monitor in self.monitors:
             monitor.resume()
     def get(self):
-        res= {}
+        res = {}
         for monitor in self.monitors:
             res[monitor.object.name] = monitor.get('r')
         return res

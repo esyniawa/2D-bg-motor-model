@@ -47,6 +47,27 @@ def forward_kinematic_arm(thetas, arm, radians=True, return_all_joint_coordinate
         return A12[:2, 3]
 
 
+def return_tactile_point(theta, arm, percentile,
+                         modality=2, radians=True):
+
+    if modality not in [0, 1, 2]:
+        raise ValueError('Define: 0 = head -> shoulder; 1 = shoulder -> elbow; 2 = elbow -> hand')
+
+    if not radians:
+        theta = np.radians(theta)
+
+    coordinates_arm = forward_kinematic_arm(theta,
+                                            arm=arm,
+                                            return_all_joint_coordinates=True)
+
+    start = coordinates_arm[:, modality]
+    end = coordinates_arm[:, modality+1]
+
+    coordinate_point = start + percentile * (end - start)
+
+    return coordinate_point
+
+
 def construct_arms(theta_right, theta_left, radians=True, do_plot=True):
     if not radians:
         theta_right = np.radians(theta_right)
@@ -71,4 +92,6 @@ def construct_arms(theta_right, theta_left, radians=True, do_plot=True):
 
 
 if __name__ == '__main__':
+    print(return_tactile_point([20, 90], 'left', 0.1, radians=False))
+
     a = construct_arms(theta_right=[20, 90], theta_left=[20, 90], radians=False, do_plot=True)
