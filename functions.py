@@ -116,10 +116,10 @@ def return_goal_indeces():
             # find min in y
             goal_indeces[i_angle, j_goal, 1] = np.argmin(np.abs(state_space[:, 0, 1] - goal_coord[i_angle, j_goal, 1]))
 
-    return goal_indeces
+    return goal_indeces.astype(int)
 
 
-def bivariate_gauss(mu_index, sigma, norm=False, plot=False):
+def bivariate_gauss(mu_index, sigma, norm=False, plot=False, limit=None):
     from scipy.stats import multivariate_normal
 
     xy = create_state_space()
@@ -140,7 +140,11 @@ def bivariate_gauss(mu_index, sigma, norm=False, plot=False):
         plt.colorbar(img)
         plt.show()
 
+    if limit is not None:
+        a[a < limit] = None
+
     return a
+
 
 @gauss_wrapper
 def generate_weights(thetas, arm, rad=True):
@@ -162,5 +166,8 @@ def generate_weights(thetas, arm, rad=True):
 
 
 if __name__ == '__main__':
+    print(create_state_space().shape)
 
-    bivariate_gauss([5, 8], 120.0, plot=True)
+    bivariate_gauss([5, 8], 20.0, plot=True)
+
+    print(return_goal_indeces())

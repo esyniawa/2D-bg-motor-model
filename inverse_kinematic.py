@@ -308,13 +308,3 @@ if __name__ == '__main__':
                                      starting_angles=[20, 110],
                                      arm='left',
                                      radians=False))
-
-    if test_distance:
-        distance(starting_joint_angles=[20, 110],
-                 resting_joint_angles=[90, 90],
-                 resting_arm='left',
-                 joint_to_touch=2,
-                 num=3,
-                 radians=False,
-                 do_plot=True,
-                 delta_shoulder=0)

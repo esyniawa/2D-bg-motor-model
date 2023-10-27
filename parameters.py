@@ -34,7 +34,7 @@ state_space_limits = {
 model_params = {}
 
 # relative positions of the goal on the forearm
-model_params['rel_position_goal'] = (0.25, 0.5, 0.75)
+model_params['rel_position_goal'] = (0.25, 0.5, 0.75, 1.0)   # must be <= 1.0
 model_params['num_goals'] = len(model_params['rel_position_goal'])
 
 # moving arm parameters
