@@ -113,12 +113,13 @@ DAPreCovariance_inhibitory_trace = ann.Synapse(
     DA_type= 1
     threshold_pre=0.0
     threshold_post=0.0
+    negterm=1.0
     """,
     equations="""
         tau_alpha*dalpha/dt = pos(-post.mp - regularization_threshold) - alpha
         dopa_sum = 2.0*(post.sum(dopa) - baseline_dopa)
         trace = pos(pre.trace - mean(pre.trace) - threshold_pre) * (mean(post.r) - post.r  - threshold_post)
-        aux = if (trace>0): 1 else: 0
+        aux = if (trace>0): negterm else: 0
         dopa_mod = if (DA_type*dopa_sum>0): K_burst*dopa_sum else: aux*DA_type*K_dip*dopa_sum
         delta = dopa_mod * trace - alpha * pos(trace)
         tau*dw/dt = delta : min=0

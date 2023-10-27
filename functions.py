@@ -63,6 +63,28 @@ def goal_coordinates(arm=model_params['resting_arm'],
     return coordinates_pos
 
 
+def create_trajectories(cov, num=model_params['num_trajectories'], fix_seed=False):
+    from forward_kinematic import return_tactile_point
+    from inverse_kinematic import inverse_kinematic_gradient_decent
+    from parameters import model_params
+
+    if fix_seed:
+        np.random.seed(2)
+    else:
+        np.random.seed()
+
+    goals = goal_coordinates()
+    length = np.random.random()
+    width = np.random.normal(0, 20)
+
+    random_point = return_tactile_point(theta=model_params['moving_arm_positions'][0],
+                                        arm=model_params['moving_arm'],
+                                        percentile=length,
+                                        delta_shoulder=width,
+                                        radians=False)
+
+
+
 def min_space_between_goals():
     """ This function returns the minimal distance between different possible goal positions. The minimal value
         should than be used to adjust the step size in creating the state space."""
@@ -168,6 +190,5 @@ def generate_weights(thetas, arm, rad=True):
 if __name__ == '__main__':
     print(create_state_space().shape)
 
-    bivariate_gauss([5, 8], 20.0, plot=True)
-
-    print(return_goal_indeces())
+    # bivariate_gauss([5, 8], 20.0, plot=True)
+    create_trajectories(10, 10)

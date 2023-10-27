@@ -55,15 +55,22 @@ model_params['resting_arm_positions'] = ((0, 90),
 model_params['num_init_positions'] = len(model_params['moving_arm_positions'])
 
 # dorsomedial
-model_params['dim_mStr'] = (5, 5)
-model_params['dim_BG'] = (model_params['num_goals'], model_params['num_init_positions'])
+model_params['dim_medial_Str'] = (5, 5)
+model_params['dim_medial_BG'] = (model_params['num_goals'], model_params['num_init_positions'])
 
 # dorsolateral
 model_params['num_trajectories'] = 16
+
+model_params['dim_lateral_BG'] = (model_params['num_init_positions'], model_params['num_trajectories'])
 
 #############################################
 ###### Simulation parameters ################
 
 sim_params = {
-    'num_threads': 2
+    'num_threads': 2,
+    # Presentation time parameters
+    'max_sim_time': 1000, # [ms]
+    'reward_time': 100, # [ms]
+    'SOA_time': 300, # [ms]
+    'learning_time': 300 # [ms]
 }
