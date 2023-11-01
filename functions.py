@@ -63,28 +63,6 @@ def goal_coordinates(arm=model_params['resting_arm'],
     return coordinates_pos
 
 
-def create_trajectories(cov, num=model_params['num_trajectories'], fix_seed=False):
-    from forward_kinematic import return_tactile_point
-    from inverse_kinematic import inverse_kinematic_gradient_decent
-    from parameters import model_params
-
-    if fix_seed:
-        np.random.seed(2)
-    else:
-        np.random.seed()
-
-    goals = goal_coordinates()
-    length = np.random.random()
-    width = np.random.normal(0, 20)
-
-    random_point = return_tactile_point(theta=model_params['moving_arm_positions'][0],
-                                        arm=model_params['moving_arm'],
-                                        percentile=length,
-                                        delta_shoulder=width,
-                                        radians=False)
-
-
-
 def min_space_between_goals():
     """ This function returns the minimal distance between different possible goal positions. The minimal value
         should than be used to adjust the step size in creating the state space."""
@@ -141,6 +119,68 @@ def return_goal_indeces():
     return goal_indeces.astype(int)
 
 
+def create_trajectories(num=model_params['num_trajectories'],
+                        min_distance_to_goal=model_params['min_distance_possible_positions'],
+                        random_sigma=model_params['sample_sigma'],
+                        fix_seed=False):
+
+    from forward_kinematic import return_tactile_point
+    from inverse_kinematic import inverse_kinematic_gradient_decent
+    from parameters import model_params
+
+    if fix_seed:
+        np.random.seed(2)
+    else:
+        np.random.seed()
+
+    state_space = create_state_space()
+    goal_ids = return_goal_indeces()
+    goal_trajectories = np.zeros((model_params['num_init_positions'], model_params['num_goals'], 2))
+
+    # add deriviates of theta
+    for i, init_pos in enumerate(goal_ids):
+        for j, goal_id in enumerate(init_pos):
+            coordinate = state_space[goal_id[0], goal_id[1], :]
+            new_theta, _ = inverse_kinematic_gradient_decent(end_effector=coordinate,
+                                                             starting_angles=model_params['moving_arm_positions'][i],
+                                                             arm=model_params['moving_arm'],
+                                                             radians=False)
+
+            goal_trajectories[i, j, :] = new_theta - np.radians(model_params['moving_arm_positions'][i])
+
+    # add other trajectories
+    other_trajectories = np.zeros((model_params['num_init_positions'], num - model_params['num_goals'], 2))
+    for m, init_pos in enumerate(goal_ids):
+        for n in range(other_trajectories.shape[1]):
+            check_min_distance = True
+
+            while check_min_distance:
+                random_point = return_tactile_point(theta=model_params['resting_arm_positions'][m],
+                                                    arm=model_params['resting_arm'],
+                                                    percentile=np.random.random(),
+                                                    delta_shoulder=np.random.normal(0, random_sigma),
+                                                    radians=False)
+
+                # check if the random point is far enough from the goals
+                coordinates = np.tile(random_point, (model_params['num_goals'], 1))
+                distances = np.linalg.norm(coordinates - state_space[init_pos[:, 0], init_pos[:, 1], :], axis=1)
+
+                if np.min(distances) > min_distance_to_goal:
+                    new_theta, _ = inverse_kinematic_gradient_decent(end_effector=random_point,
+                                                                     starting_angles=model_params['moving_arm_positions'][m],
+                                                                     arm=model_params['moving_arm'],
+                                                                     radians=False)
+
+                    other_trajectories[m, n, :] = new_theta - np.radians(model_params['moving_arm_positions'][i])
+                    check_min_distance = False
+
+    trajectories = np.hstack((goal_trajectories, other_trajectories))
+    # shuffle trajectories
+    [np.random.shuffle(x) for x in trajectories]
+
+    return trajectories
+
+
 def bivariate_gauss(mu_index, sigma, norm=False, plot=False, limit=None):
     from scipy.stats import multivariate_normal
 
@@ -162,6 +202,7 @@ def bivariate_gauss(mu_index, sigma, norm=False, plot=False, limit=None):
         plt.colorbar(img)
         plt.show()
 
+    # TODO: This doesn't work yet
     if limit is not None:
         a[a < limit] = None
 
@@ -191,4 +232,4 @@ if __name__ == '__main__':
     print(create_state_space().shape)
 
     # bivariate_gauss([5, 8], 20.0, plot=True)
-    create_trajectories(10, 10)
+    create_trajectories(10, 10, 10)

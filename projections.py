@@ -25,7 +25,7 @@ def STN_GPi_connection(preDim, postDim, weight=1.0):
     return w.reshape(i*j, preDim)
 
 
-def dmThal_PM_connection(sigma):
+def dmThal_PM_connection(sigma, limit=None):
     """
     Returns a connection matrix usable in ANNarchy.
     This custom connection maps the different goals to limb positions in the state space. The certainty of the position
@@ -41,7 +41,7 @@ def dmThal_PM_connection(sigma):
     w = np.empty((dim_thal, dim_body_maps, x_dim, y_dim, dim_body_maps))
     for i, init_position in enumerate(goals):
         for j, goal in enumerate(init_position):
-            w[j, i, :, :, i] = bivariate_gauss(mu_index=goal, sigma=sigma, norm=True).T
+            w[j, i, :, :, i] = bivariate_gauss(mu_index=goal, sigma=sigma, norm=True, limit=limit).T
 
     w = w.T
     return w.reshape(y_dim * x_dim * dim_body_maps, dim_thal * dim_body_maps)
