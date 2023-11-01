@@ -1,10 +1,12 @@
 import ANNarchy as ann
+from os import path, makedirs
+import sys
 
 from dorsomedial_network import *
 from dorsolateral_network import *
 
 from projections import dmThal_PM_connection
-from parameters import model_params, sim_params
+from parameters import model_params, sim_params, create_results_folder, compile_folder
 
 from forward_kinematic import forward_kinematic_arm
 
@@ -13,9 +15,7 @@ from monitoring import Pop_Monitor, Con_Monitor
 
 
 def add_connections():
-    # TODO: Add connections from the dorsomedial connection
-
-    # dorsolateral
+    # adds the connection between both networks
     VAPM_con = ann.Projection(pre=VA, post=PM, target='exc')
     weights = dmThal_PM_connection(sigma=10)
     VAPM_con.connect_from_matrix(weights)
@@ -56,7 +56,12 @@ def learn_motor_skills(layer,
     reached_position = forward_kinematic_arm(thetas=M1_trajectory+init_position,
                                              arm=arm)
 
-    if np.linalg.norm(PM_coordinate - reached_position) < 1.0:
+    # Does the selected trajectory reach the most active PM coordinate?
+    distance = np.linalg.norm(PM_coordinate - reached_position)
+    correct = distance < 5.0 # in [mm]
+
+    # if yes, release DA
+    if correct:
         reward.baseline = 1.0
         latSNc.firing = 1.0
         ann.simulate(reward_time)
@@ -68,16 +73,94 @@ def learn_motor_skills(layer,
     ann.simulate(SOA_time)
     ann.reset(monitors=False, populations=True)
 
-def train_motor_network():
+    return correct, distance
 
+
+def train_motor_network(simID,
+                        VA_amp=2.0,
+                        num_goals=model_params['num_goals'],
+                        num_layers=model_params['num_init_positions'],
+                        max_training_trials=100,
+                        max_correct=2,
+                        monitoring_training=True):
+
+    # results folder + variables
+    save_folder = create_results_folder(simID)
+
+    # monitoring variables
+    if monitoring_training:
+        pop_monitors = Pop_Monitor([VA, PM, latStrD1, SNr, VA, M1, latSNc], samplingrate=10)
+        con_monitors = Con_Monitor([CortexStrD1_putamen, StrD1SNc_put])
+
+    print('Training BG...\n')
+    print('--------------\n')
+
+    # define state space and possible trajectories
     state_space = create_state_space()
     possible_trajectories = create_trajectories()
 
-    pass
+    for current_layer in range(num_layers):
+
+        print(f'Layer: {current_layer}\n')
+        sub_folder = f'Layer[{current_layer}]/'
+
+        error_history = []
+
+        if monitoring_training:
+            pop_monitors.start()
+
+        for goal in range(num_goals):
+
+            VA_input = np.zeros(num_goals)
+            VA_input[goal] = VA_amp
+
+            n_trials = 0
+            n_correct = 0
+
+            while (n_trials < max_training_trials) & (n_correct < max_correct):
+                correct, error_distance = learn_motor_skills(layer=init_pos,
+                                                             thal_input_array=VA_input,
+                                                             M1_trajectories=possible_trajectories[init_pos],
+                                                             state_space=state_space)
+
+                if monitoring_training:
+                    con_monitors.extract_weights()
+
+                print(f'Goal: {goal} | Training_trial: {n_trials} | Correct: {n_correct}')
+
+                error_history.append((goal, error_distance))
+                n_correct += correct
+                n_trials += 1
+
+        # save monitors
+        if monitoring_training:
+            # Populations
+            pop_monitors.stop()
+            pop_monitors.save(save_folder + sub_folder)
+
+            # Weights
+            con_monitors.save_cons(save_folder + sub_folder)
+            con_monitors.reset()
+
+        # save error history
+        np.savetxt(save_folder + sub_folder + 'error_history.txt', np.array(error_history))
 
 
 def run_full_network():
     pass
 
 
+if __name__ == '__main__':
 
+    simID = sys.argv[1]
+
+    # add connections between the dorsomedial and dorsolateral network
+    add_connections()
+
+    # compiling network
+    if not path.exists(compile_folder):
+        makedirs(compile_folder)
+    ann.compile(directory=compile_folder + f'annarchy_motorBG[{simID}]')
+
+    # run training dorsolateral network
+    train_motor_network(simID)

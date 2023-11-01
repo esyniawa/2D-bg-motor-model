@@ -1,9 +1,13 @@
 import numpy as np
 import os
 
-results_folder = 'results/'
-if not os.path.exists(results_folder):
-    os.mkdir(results_folder)
+
+def create_results_folder(simID):
+    results_folder = f'results/train_motor_network[{simID}]/'
+    if not os.path.exists(results_folder):
+        os.makedirs(results_folder)
+    return results_folder
+
 
 compile_folder = 'networks/'
 if not os.path.exists(compile_folder):
@@ -67,7 +71,7 @@ model_params['threshold_M1r'] = 0.1
 model_params['M1_amp'] = 1.0
 
 model_params['min_distance_possible_positions'] = 10.0 # in [mm]
-model_params['sample_sigma'] = 20.0 # in [mm]
+model_params['sample_sigma'] = 50.0 # in [mm]
 
 #############################################
 ###### Simulation parameters ################
@@ -77,6 +81,6 @@ sim_params = {
     # Presentation time parameters
     'max_sim_time': 1000, # [ms]
     'reward_time': 100, # [ms]
-    'SOA_time': 300, # [ms]
+    'SOA_time': 100, # [ms]
     'learning_time': 300 # [ms]
 }

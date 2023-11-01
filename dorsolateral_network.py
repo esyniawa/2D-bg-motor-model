@@ -7,6 +7,7 @@ from functions import create_state_space
 y_dim, x_dim, _ = create_state_space().shape
 
 dl_baseline_DA = 0.1
+
 #################################################
 ############# Populations #######################
 
@@ -39,7 +40,7 @@ reward_inh = ann.Population(name='Inhibitory reward population', geometry=1, neu
 SNrSNr_putamen = []
 VLVL_putamen = []
 
-# laterals layerwise therefore this loop
+# laterals connect layerwise therefore this loop
 for init_pos in range(model_params['num_init_positions']):
     SNrSNr_putamen.append(ann.Projection(pre=SNr[init_pos, :], post=SNr[init_pos, :], target='exc', synapse=ReversedSynapse))
     SNrSNr_putamen[init_pos].connect_all_to_all(weights=0.1)
