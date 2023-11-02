@@ -155,11 +155,16 @@ def create_trajectories(num=model_params['num_trajectories'],
             check_min_distance = True
 
             while check_min_distance:
+                delta = np.random.normal(0, random_sigma)
+                print(delta)
                 random_point = return_tactile_point(theta=model_params['resting_arm_positions'][m],
                                                     arm=model_params['resting_arm'],
                                                     percentile=np.random.random(),
-                                                    delta_shoulder=np.random.normal(0, random_sigma),
+                                                    delta_shoulder=delta,
                                                     radians=False)
+
+
+                print(random_point)
 
                 # check if the random point is far enough from the goals
                 coordinates = np.tile(random_point, (model_params['num_goals'], 1))
@@ -245,3 +250,5 @@ if __name__ == '__main__':
 
     # bivariate_gauss([5, 8], 20.0, plot=True)
     print(create_trajectories(10, 10, 10))
+
+    print(list(rangeX((5,5))))

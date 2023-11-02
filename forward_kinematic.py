@@ -95,4 +95,4 @@ def construct_arms(theta_right, theta_left, radians=True, do_plot=True):
 if __name__ == '__main__':
     print(return_tactile_point([20, 90], 'left', 0.1, radians=False))
 
-    a = construct_arms(theta_right=[20, 90], theta_left=[20, 90], radians=False, do_plot=True)
+    a = construct_arms(theta_right=[20, 110], theta_left=[20, 90], radians=False, do_plot=True)

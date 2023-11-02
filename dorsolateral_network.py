@@ -3,6 +3,7 @@ import ANNarchy as ann
 from parameters import model_params
 from model_definitions import *
 
+from projections import laterals_layerwise
 from functions import create_state_space
 y_dim, x_dim, _ = create_state_space().shape
 
@@ -37,19 +38,18 @@ reward_inh = ann.Population(name='Inhibitory reward population', geometry=1, neu
 ####### Projections ###########################
 
 # Laterals
-SNrSNr_putamen = []
-VLVL_putamen = []
+SNrSNr_putamen = ann.Projection(pre=SNr, post=SNr, target='exc', synapse=ReversedSynapse)
+SNr_laterals = laterals_layerwise(preDim=model_params['dim_lateral_BG'], postDim=model_params['dim_lateral_BG'], weight=0.1)
+SNrSNr_putamen.connect_from_matrix(SNr_laterals)
+SNrSNr_putamen.reversal = 1.2
 
-# laterals connect layerwise therefore this loop
-for init_pos in range(model_params['num_init_positions']):
-    SNrSNr_putamen.append(ann.Projection(pre=SNr[init_pos, :], post=SNr[init_pos, :], target='exc', synapse=ReversedSynapse))
-    SNrSNr_putamen[init_pos].connect_all_to_all(weights=0.1)
-    SNrSNr_putamen[init_pos].reversal = 1.2
 
-    VLVL_putamen.append(ann.Projection(pre=VL[init_pos, :], post=VL[init_pos, :], target='inh'))
-    VLVL_putamen[init_pos].connect_all_to_all(weights=0.4)
+VLVL_putamen = ann.Projection(pre=VL, post=VL, target='inh')
+VL_laterals = laterals_layerwise(preDim=model_params['dim_lateral_BG'], postDim=model_params['dim_lateral_BG'], weight=0.4)
+VLVL_putamen.connect_from_matrix(VL_laterals)
 
-# FF
+
+# FF TODO: This connection should be an ANNarchy object not a list
 CortexStrD1_putamen = []
 for init_pos in range(model_params['num_init_positions']):
     CortexStrD1_putamen.append(ann.Projection(pre=PM[init_pos, :, :],

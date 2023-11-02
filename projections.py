@@ -60,6 +60,24 @@ def dmThal_PM_connection(sigma, limit=None):
     return w.reshape(y_dim * x_dim * dim_body_maps, dim_thal * dim_body_maps)
 
 
+def laterals_layerwise(preDim, postDim, weight=1.0):
+
+    layer_pre, neurons_pre = preDim
+    layer_post, neurons_post = postDim
+
+    if layer_post != layer_pre:
+        raise AttributeError
+
+    w = np.zeros((layer_post, neurons_post, layer_pre, neurons_pre))
+    for layer in range(layer_post):
+        for n_pre in range(neurons_pre):
+            for n_post in range(neurons_post):
+                if n_post != n_pre:
+                    w[layer, n_post, layer, n_pre] = weight
+
+    return w.reshape(layer_post * neurons_post, layer_pre * neurons_pre)
+
+
 # TODO: implement this function as the connector between PM and Striatum D1 in the dorsolateral network
 def dim_to_one(pre, post, preDim, weight=1.0, delays=0):
     """
@@ -67,7 +85,6 @@ def dim_to_one(pre, post, preDim, weight=1.0, delays=0):
     pre-dimension (preDim) to one neuron of the pre-population.
     """
     assert post.geometry[0] == pre.geometry[preDim]
-
 
     synapses = ann.CSR()
     nGeometry = pre.geometry[:preDim] + pre.geometry[preDim + 1:]
