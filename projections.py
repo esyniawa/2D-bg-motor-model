@@ -1,4 +1,6 @@
 import numpy as np
+import ANNarchy as ann
+from functions import rangeX
 
 
 def STN_GPi_connection(preDim, postDim, weight=1.0):
@@ -25,6 +27,17 @@ def STN_GPi_connection(preDim, postDim, weight=1.0):
     return w.reshape(i*j, preDim)
 
 
+def S1_STN_connection():
+
+    from functions import generate_weights
+    from parameters import model_params
+
+    w = generate_weights(thetas=model_params['moving_arm_positions'],
+                         arm=model_params['moving_arm'])
+
+    return w.T
+
+
 def dmThal_PM_connection(sigma, limit=None):
     """
     Returns a connection matrix usable in ANNarchy.
@@ -45,3 +58,23 @@ def dmThal_PM_connection(sigma, limit=None):
 
     w = w.T
     return w.reshape(y_dim * x_dim * dim_body_maps, dim_thal * dim_body_maps)
+
+
+# TODO: implement this function as the connector between PM and Striatum D1 in the dorsolateral network
+def dim_to_one(pre, post, preDim, weight=1.0, delays=0):
+    """
+    Creates a connection that connects all neurons along the specified
+    pre-dimension (preDim) to one neuron of the pre-population.
+    """
+    assert post.geometry[0] == pre.geometry[preDim]
+
+
+    synapses = ann.CSR()
+    nGeometry = pre.geometry[:preDim] + pre.geometry[preDim + 1:]
+    for n in range(post.geometry[0]):
+        pre_ranks = []
+        for m in rangeX(nGeometry):
+            mn = m[:preDim] + (n,) + m[preDim + 1:]
+            pre_ranks.append(pre.rank_from_coordinates(mn))
+        synapses.add(n, pre_ranks, [weight], [delays])
+    return synapses

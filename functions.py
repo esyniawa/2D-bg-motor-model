@@ -171,7 +171,7 @@ def create_trajectories(num=model_params['num_trajectories'],
                                                                      arm=model_params['moving_arm'],
                                                                      radians=False)
 
-                    other_trajectories[m, n, :] = new_theta - np.radians(model_params['moving_arm_positions'][i])
+                    other_trajectories[m, n, :] = new_theta - np.radians(model_params['moving_arm_positions'][m])
                     check_min_distance = False
 
     trajectories = np.hstack((goal_trajectories, other_trajectories))
@@ -228,8 +228,20 @@ def generate_weights(thetas, arm, rad=True):
     return distance
 
 
+def rangeX(iterations):
+    """
+    Multidimensional iterator using all possible combinations within the given
+    boundaries e.g. rangeX((2,3)) => 00 01 02 10 11 12
+    """
+    import itertools
+
+    if not isinstance(iterations, (tuple)):
+        raise AttributeError
+    return itertools.product(*map(range, iterations))
+
+
 if __name__ == '__main__':
     print(create_state_space().shape)
 
     # bivariate_gauss([5, 8], 20.0, plot=True)
-    create_trajectories(10, 10, 10)
+    print(create_trajectories(10, 10, 10))

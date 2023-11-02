@@ -38,8 +38,7 @@ def learn_motor_skills(layer,
     ann.simulate_until(max_duration=choose_time, population=M1)
 
     # Find max and execute motorplan
-    M1r = np.array(M1.r)
-    M1r_max = np.max(M1r)
+    M1r_max = np.max(M1.r)
 
     if M1r_max < model_params['threshold_M1r']:
         newM1_baseline = np.zeros(num_trajectories)
@@ -48,13 +47,24 @@ def learn_motor_skills(layer,
         M1[layer, :].baseline = newM1_baseline
         ann.simulate(learning_time)
 
-    PM_argmax = np.argmax(PM.r)
-    PM_coordinate = state_space[PM_argmax[0], PM_argmax[1], :]
+    # find most active coordinate
+    PMr = np.array(PM.r)
+    _, PM_y, PM_x = np.unravel_index(PMr.argmax(), PMr.shape)
+    PM_coordinate = state_space[PM_y, PM_x, :]
 
-    M1_argmax = np.argmax(M1.r)
-    M1_trajectory = M1_trajectories[M1_argmax]
+    print(PM_coordinate)
+
+    # find the most active motor plan
+    M1r = np.array(M1.r)
+    M1_layer, M1_plan = np.unravel_index(M1r.argmax(), M1r.shape)
+
+    # execute plan
+    M1_trajectory = M1_trajectories[M1_plan]
     reached_position = forward_kinematic_arm(thetas=M1_trajectory+init_position,
-                                             arm=arm)
+                                             arm=arm,
+                                             return_all_joint_coordinates=False)
+
+    print(reached_position)
 
     # Does the selected trajectory reach the most active PM coordinate?
     distance = np.linalg.norm(PM_coordinate - reached_position)
@@ -65,6 +75,7 @@ def learn_motor_skills(layer,
         reward.baseline = 1.0
         latSNc.firing = 1.0
         ann.simulate(reward_time)
+        # reset DA
         latSNc.firing = 0.0
         reward.baseline = 0.0
 
@@ -90,7 +101,7 @@ def train_motor_network(simID,
     # monitoring variables
     if monitoring_training:
         pop_monitors = Pop_Monitor([VA, PM, latStrD1, SNr, VA, M1, latSNc], samplingrate=10)
-        con_monitors = Con_Monitor([CortexStrD1_putamen, StrD1SNc_put])
+        con_monitors = Con_Monitor([StrD1SNc_put,] + [Connection for Connection in CortexStrD1_putamen])
 
     print('Training BG...\n')
     print('--------------\n')
@@ -118,19 +129,19 @@ def train_motor_network(simID,
             n_correct = 0
 
             while (n_trials < max_training_trials) & (n_correct < max_correct):
-                correct, error_distance = learn_motor_skills(layer=init_pos,
+                correct, error_distance = learn_motor_skills(layer=current_layer,
                                                              thal_input_array=VA_input,
-                                                             M1_trajectories=possible_trajectories[init_pos],
+                                                             M1_trajectories=possible_trajectories[current_layer],
                                                              state_space=state_space)
 
                 if monitoring_training:
                     con_monitors.extract_weights()
 
-                print(f'Goal: {goal} | Training_trial: {n_trials} | Correct: {n_correct}')
-
                 error_history.append((goal, error_distance))
                 n_correct += correct
                 n_trials += 1
+
+                print(f'Goal: {goal} | Training_trial: {n_trials}. | Correct: {n_correct}')
 
         # save monitors
         if monitoring_training:

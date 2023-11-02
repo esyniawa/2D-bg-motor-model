@@ -71,7 +71,7 @@ model_params['threshold_M1r'] = 0.1
 model_params['M1_amp'] = 1.0
 
 model_params['min_distance_possible_positions'] = 10.0 # in [mm]
-model_params['sample_sigma'] = 50.0 # in [mm]
+model_params['sample_sigma'] = 10.0 # in [mm]
 
 #############################################
 ###### Simulation parameters ################

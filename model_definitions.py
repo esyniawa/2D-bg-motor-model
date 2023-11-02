@@ -13,7 +13,7 @@ BaselineNeuron = ann.Neuron(
         dr/dt = if (B>0.01): (base-r)/tau_up else: -r/tau_down : min=0.0
     """,
     name = "Baseline Neuron",
-    description = "Neuron with baseline to be set.",
+    description = "Neuron with baseline to be set. ",
 )
 
 LinearNeuron = ann.Neuron(

@@ -55,9 +55,10 @@ for init_pos in range(model_params['num_init_positions']):
     CortexStrD1_putamen.append(ann.Projection(pre=PM[init_pos, :, :],
                                               post=latStrD1[init_pos, :],
                                               target='exc',
-                                              synapse=DAPostCovarianceNoThreshold))
+                                              synapse=DAPostCovarianceNoThreshold,
+                                              name=f'CortexStrD1_putamen_{init_pos}'))
 
-    CortexStrD1_putamen[init_pos].connect_all_to_all(weights=0)
+    CortexStrD1_putamen[init_pos].connect_all_to_all(weights=0.0)
     CortexStrD1_putamen[init_pos].tau = 2200
     CortexStrD1_putamen[init_pos].regularization_threshold = 1.2
     CortexStrD1_putamen[init_pos].tau_alpha = 20.0
