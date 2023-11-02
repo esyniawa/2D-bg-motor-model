@@ -60,7 +60,7 @@ model_params['num_init_positions'] = len(model_params['moving_arm_positions'])
 
 # dorsomedial
 model_params['dim_medial_Str'] = (5, 5)
-model_params['dim_medial_BG'] = (model_params['num_goals'], model_params['num_init_positions'])
+model_params['dim_medial_BG'] = (model_params['num_init_positions'], model_params['num_goals'])
 
 # dorsolateral
 model_params['num_trajectories'] = 16
