@@ -52,8 +52,6 @@ def learn_motor_skills(layer,
     _, PM_y, PM_x = np.unravel_index(PMr.argmax(), PMr.shape)
     PM_coordinate = state_space[PM_y, PM_x, :]
 
-    print(PM_coordinate)
-
     # find the most active motor plan
     M1r = np.array(M1.r)
     M1_layer, M1_plan = np.unravel_index(M1r.argmax(), M1r.shape)
@@ -63,8 +61,6 @@ def learn_motor_skills(layer,
     reached_position = forward_kinematic_arm(thetas=M1_trajectory+init_position,
                                              arm=arm,
                                              return_all_joint_coordinates=False)
-
-    print(reached_position)
 
     # Does the selected trajectory reach the most active PM coordinate?
     distance = np.linalg.norm(PM_coordinate - reached_position)
@@ -101,7 +97,7 @@ def train_motor_network(simID,
     # monitoring variables
     if monitoring_training:
         pop_monitors = Pop_Monitor([VA, PM, latStrD1, SNr, VA, M1, latSNc], samplingrate=10)
-        con_monitors = Con_Monitor([StrD1SNc_put,] + [Connection for Connection in CortexStrD1_putamen])
+        con_monitors = Con_Monitor([StrD1SNc_put,] + [Connection for Connection in PMStrD1_putamen])
 
     print('Training BG...\n')
     print('--------------\n')
@@ -141,7 +137,7 @@ def train_motor_network(simID,
                 n_correct += correct
                 n_trials += 1
 
-                print(f'Goal: {goal} | Training_trial: {n_trials}. | Correct: {n_correct}')
+                print(f'Goal: {goal} | Training_trial: {n_trials} | Correct: {n_correct}')
 
         # save monitors
         if monitoring_training:

@@ -58,22 +58,25 @@ def load_monitors(simID, layer, load_VA_data=False, load_PM_data=False):
 
 
 def load_weights(simID, layer):
-    from parameters import create_results_folder
+    from parameters import create_results_folder, model_params
 
+    init_positions = model_params['num_init_positions']
     results_folder = create_results_folder(simID)
     sub_folder = f'Layer[{layer}]/'
 
     weights = {}
     try:
-        weights['wCortexD1'] = np.load(results_folder + sub_folder + f'wproj2.npy')
+        for init_pos in range(init_positions):
+            weights[f'wPMD1_{init_pos}'] = np.load(results_folder + sub_folder + f'PMStrD1_putamen_{init_pos}.npy')
     except:
-        print("Weights from Cortex to D1 is missing.")
-        weights['wCortexD1'] = None
+        print("Weights from PM to D1 is missing.")
+        for init_pos in range(init_positions):
+            weights[f'wPMD1_{init_pos}'] = None
 
     try:
-        weights['DAprediction'] = np.load(results_folder + sub_folder + f'wproj10.npy')
+        weights['DAprediction'] = np.load(results_folder + sub_folder + f'StrD1SNc_put.npy')
     except:
-        print("Weights from Cortex to D1 is missing.")
+        print("Weights from D1 to SNc is missing.")
         weights['DAprediction'] = None
 
     return weights

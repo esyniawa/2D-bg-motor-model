@@ -3,8 +3,7 @@ import numpy as np
 
 from model_definitions import *
 from parameters import model_params
-from functions import generate_weights
-from projections import STN_GPi_connection
+from projections import STN_GPi_connection, laterals_layerwise, S1_STN_connection
 
 baseline_dopa_caud = 0.1
 
@@ -160,4 +159,26 @@ StrThalGPe_caud = ann.Projection(pre=StrThal_caud, post=GPe_caud, target='inh', 
 StrThalGPe_caud.connect_one_to_one(weights=0.5)
 
 # Lateral connections
-# TODO: implement lateral connections in the dorsomedial loop layerwise
+# Striatum
+StrD2StrD2_caud = ann.Projection(pre=StrD2_caud, post=StrD2_caud, target='inh')
+StrD2StrD2_caud.connect_all_to_all(weights=0.2)
+
+StrD1StrD1_caud = ann.Projection(pre=StrD1_caud, post=StrD1_caud, target='inh')
+StrD1StrD1_caud.connect_all_to_all(weights=0.2)
+
+# other laterals layerwise
+w_caud_laterals = laterals_layerwise(preDim=model_params['dim_medial_BG'], postDim=model_params['dim_medial_BG'])
+
+StrThalStrThal_caud = ann.Projection(pre=StrThal_caud, post=StrThal_caud, target='inh')
+StrThalStrThal_caud.connect_from_matrix(0.3 * w_caud_laterals) #0.5
+
+GPiGPi = ann.Projection(pre=GPi_caud, post=GPi_caud, target='exc', synapse=ReversedSynapse)
+GPiGPi.connect_from_matrix(0.15 * w_caud_laterals)
+GPiGPi.reversal = 0.4
+
+GPeGPe = ann.Projection(pre=GPe_caud, post=GPe_caud, target='inh')
+GPeGPe.connect_from_matrix(0.05 * w_caud_laterals)
+
+VAVA = ann.Projection(pre=VA, post=VA, target='inh')
+VAVA.connect_from_matrix(0.05 * w_caud_laterals)
+
