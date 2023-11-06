@@ -12,7 +12,7 @@ baseline_dopa_caud = 0.1
 # Input populations
 dPFC = ann.Population(name="dPFC", geometry=model_params['num_goals'], neuron=BaselineNeuron)
 
-S1Cortex = ann.Population(name="Primary somatosensory Cortex",
+S1Cortex = ann.Population(name="Primary_Somatosensory_Cortex",
                           geometry=model_params['num_init_positions'],
                           neuron=BaselineNeuron)
 
@@ -41,7 +41,7 @@ GPe_caud.baseline = 1.0
 
 VA = ann.Population(name="Thal_caud", geometry=model_params['dim_medial_BG'], neuron=LinearNeuron)
 VA.noise = 0.025
-VA.baseline = 0.7
+VA.baseline = 1.0
 
 StrThal_caud = ann.Population(name="StrThal_caud", geometry=model_params['dim_medial_BG'], neuron=LinearNeuron)
 StrThal_caud.noise = 0.01
@@ -49,29 +49,29 @@ StrThal_caud.baseline = 0.4
 
 SNc_caud = ann.Population(name='SNc_caud', geometry=1, neuron=DopamineNeuron)
 SNc_caud.exc_threshold = 0.2
-SNc_caud.baseline = 0.1
-SNc_caud.factor_inh = 1.0
+SNc_caud.baseline = baseline_dopa_caud
+SNc_caud.factor_inh = 10.0
 
 # Projections
 # TODO: thresholds must be set to the input accordingly
 # direct pathway
-PFCdStrD1 = ann.Projection(pre=dPFC, post=StrD1_caud, target='exc', synapse=DAPostCovarianceNoThreshold, name='PFCdStrD1_caud')
-PFCdStrD1.connect_all_to_all(weights=ann.Normal(0.5, 0.2))
-PFCdStrD1.tau = 50.0 #100
-PFCdStrD1.regularization_threshold = 2.0
-PFCdStrD1.tau_alpha = 5.0
-PFCdStrD1.baseline_dopa = baseline_dopa_caud
-PFCdStrD1.K_dip = 0.05
-PFCdStrD1.K_burst = 1.0
-PFCdStrD1.DA_type = 1
-PFCdStrD1.threshold_pre = 0.2
-PFCdStrD1.threshold_post = 0.0
+PFCdStrD1_caud = ann.Projection(pre=dPFC, post=StrD1_caud, target='exc', synapse=DAPostCovarianceNoThreshold, name='PFCdStrD1_caud')
+PFCdStrD1_caud.connect_all_to_all(weights=ann.Normal(0.5, 0.2))
+PFCdStrD1_caud.tau = 100.0 #100
+PFCdStrD1_caud.regularization_threshold = 2.0
+PFCdStrD1_caud.tau_alpha = 5.0
+PFCdStrD1_caud.baseline_dopa = baseline_dopa_caud
+PFCdStrD1_caud.K_dip = 0.05
+PFCdStrD1_caud.K_burst = 1.0
+PFCdStrD1_caud.DA_type = 1
+PFCdStrD1_caud.threshold_pre = 0.2
+PFCdStrD1_caud.threshold_post = 0.0
 
 StrD1GPi = ann.Projection(pre=StrD1_caud, post=GPi_caud, target='inh', synapse=DAPreCovariance_inhibitory_trace, name='StrD1GPi_caud')
 StrD1GPi.connect_all_to_all(weights=ann.Normal(0.1, 0.01)) # scale by numer of stimuli #var 0.01
-StrD1GPi.tau = 50.0 #700 #550
+StrD1GPi.tau = 500.0 #700 #550
 StrD1GPi.regularization_threshold = 2.25 #1.5
-StrD1GPi.tau_alpha = 4.0 # 20.0
+StrD1GPi.tau_alpha = 5.0 # 20.0
 StrD1GPi.baseline_dopa = baseline_dopa_caud
 StrD1GPi.K_dip = 0.9
 StrD1GPi.K_burst = 1.0
@@ -109,7 +109,10 @@ GPeGPi.connect_one_to_one(weights=1.0)
 
 # hyperdirect pathway
 S1STN_caud = ann.Projection(pre=S1Cortex, post=STN_caud, target='exc', name='S1STN_caud')
-S1STN_caud.connect_one_to_one(weights=1.0)
+S1STN_caud.connect_one_to_one(weights=0.3)
+
+# S1STN_weights = S1_STN_connection(weights=0.3)
+# S1STN_caud.connect_from_matrix(S1STN_weights)
 
 STNGPi_caud = ann.Projection(pre=STN_caud, post=GPi_caud, target='exc', name='STNGPi_caud')
 STNGPi_weights = STN_GPi_connection(preDim=model_params['num_init_positions'],
@@ -177,8 +180,8 @@ GPiGPi.connect_from_matrix(0.15 * w_caud_laterals)
 GPiGPi.reversal = 0.4
 
 GPeGPe = ann.Projection(pre=GPe_caud, post=GPe_caud, target='inh')
-GPeGPe.connect_from_matrix(0.05 * w_caud_laterals)
+GPeGPe.connect_from_matrix(0.1 * w_caud_laterals)
 
 VAVA = ann.Projection(pre=VA, post=VA, target='inh')
-VAVA.connect_from_matrix(0.05 * w_caud_laterals)
+VAVA.connect_from_matrix(0.1 * w_caud_laterals)
 

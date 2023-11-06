@@ -1,4 +1,4 @@
-import ANNarchy as ann
+import os.path
 from os import path, makedirs
 import sys
 
@@ -21,10 +21,12 @@ def add_connections():
     VAPM_con.connect_from_matrix(weights)
 
 
+# TODO: Should return
 def learn_motor_skills(layer,
                        thal_input_array,
                        M1_trajectories,
                        state_space,
+                       exclude_M1_trajectories=[],
                        choose_time=sim_params['max_sim_time'],
                        learning_time=sim_params['learning_time'],
                        reward_time=sim_params['reward_time'],
@@ -83,33 +85,159 @@ def learn_motor_skills(layer,
     return correct, distance
 
 
+def link_goals_with_bodyrep(id_goal,
+                            id_layer,
+                            id_output_VA,
+                            choose_time=sim_params['max_sim_time'],
+                            reward_time=sim_params['reward_time'],
+                            SOA_time=sim_params['SOA_time']):
+
+    # create input
+    dPFC_baseline = np.zeros(model_params['num_goals'])
+    dPFC_baseline[id_goal] = model_params['exc_dPFC']
+
+    S1_baseline = np.zeros(model_params['num_init_positions'])
+    S1_baseline[id_layer] = model_params['exc_S1']
+
+    # set baseline from input
+    dPFC.baseline = dPFC_baseline
+    S1Cortex.baseline = S1_baseline
+
+    # simulate and look up if the "correct" neuron is active
+    ann.simulate(choose_time)
+
+    VAr = np.array(VA.r)
+    VA_layer, VA_neuron = np.unravel_index(VAr.argmax(), VAr.shape)
+
+    # print(STN_caud.r)
+    # print(StrD1_caud.r)
+    # print(GPi_caud.r)
+    # print(VAr)
+    #
+    # print(GPe_caud.r)
+
+    if (VA_layer == id_layer) and (VA_neuron == id_output_VA):
+        PPTN.baseline = 1.0
+        SNc_caud.firing = 1.0
+        ann.simulate(reward_time)
+        # reset DA
+        PPTN.baseline = 0.0
+        SNc_caud.firing = 0.0
+
+        correct = 1
+    else:
+        PPTN.baseline = 0.0
+        SNc_caud.firing = 1.0
+        ann.simulate(reward_time)
+        # reset DA
+        PPTN.baseline = 0.0
+        SNc_caud.firing = 0.0
+
+        correct = 0
+
+    # SOA
+    dPFC.baseline = 0.0
+    S1Cortex.baseline = 0.0
+    ann.simulate(SOA_time)
+    ann.reset(monitors=False, populations=True)
+
+    return correct
+
+
+def train_body(simID,
+               learning_matrix,
+               num_layers=model_params['num_init_positions'],
+               max_correct=3,
+               max_training_trials=10,
+               monitoring_training=True):
+
+    # results folder + variables
+    save_folder, _ = create_results_folder(simID)
+
+    # monitoring rates and weights
+    if monitoring_training:
+        pop_monitors = Pop_Monitor(populations=[dPFC, S1Cortex, SNc_caud, StrD1_caud, StrD2_caud, STN_caud,
+                                                StrThal_caud, GPe_caud, GPi_caud, VA],
+                                   samplingrate=10)
+
+        con_monitors = Con_Monitor([PFCdStrD1_caud, StrD1GPi, PFCdStrD2_caud, StrD2GPe, StrD1SNc_caud])
+
+    print('---------------------------')
+    print('Training dorsomedial BG...')
+    print('---------------------------\n')
+
+    for i, goal in enumerate(learning_matrix):
+
+        sub_folder = f'Goal[{i}]/'
+        if not os.path.exists(save_folder + sub_folder):
+            os.mkdir(save_folder + sub_folder)
+
+        error_history = []
+
+        for current_layer in range(num_layers):
+
+            n_trials = 0
+            n_correct = 0
+
+            if monitoring_training:
+                pop_monitors.start()
+
+            while (n_trials < max_training_trials) & (n_correct < max_correct):
+                n_correct += link_goals_with_bodyrep(id_goal=goal[0],
+                                                     id_output_VA=goal[1],
+                                                     id_layer=current_layer)
+
+                if monitoring_training:
+                    con_monitors.extract_weights()
+
+                n_trials += 1
+
+                print(f'Goal: {goal} | Body Position: {current_layer} | Training_trial: {n_trials} | Correct: {n_correct}')
+
+            error_history.append([i, current_layer, n_correct, n_trials])
+
+        # save monitors
+        if monitoring_training:
+            # Populations
+            pop_monitors.stop()
+            pop_monitors.save(save_folder + sub_folder)
+
+            # Weights
+            con_monitors.save_cons(save_folder + sub_folder)
+            con_monitors.reset()
+
+        # save error history
+        np.savetxt(save_folder + sub_folder + 'training_history_dm.txt', np.array(error_history))
+
+
 def train_motor_network(simID,
+                        state_space,
+                        possible_trajectories,
                         VA_amp=2.0,
                         num_goals=model_params['num_goals'],
                         num_layers=model_params['num_init_positions'],
-                        max_training_trials=100,
+                        max_training_trials=10,
                         max_correct=2,
                         monitoring_training=True):
 
     # results folder + variables
-    save_folder = create_results_folder(simID)
+    save_folder, _ = create_results_folder(simID)
 
     # monitoring variables
     if monitoring_training:
-        pop_monitors = Pop_Monitor([VA, PM, latStrD1, SNr, VA, M1, latSNc], samplingrate=10)
+        pop_monitors = Pop_Monitor([VA, PM, latStrD1, SNr, VL, M1, latSNc], samplingrate=10)
         con_monitors = Con_Monitor([StrD1SNc_put,] + [Connection for Connection in PMStrD1_putamen])
 
-    print('Training BG...\n')
-    print('--------------\n')
-
-    # define state space and possible trajectories
-    state_space = create_state_space()
-    possible_trajectories = create_trajectories()
+    print('---------------------------')
+    print('Training dorsolateral BG...')
+    print('---------------------------\n')
 
     for current_layer in range(num_layers):
 
-        print(f'Layer: {current_layer}\n')
+        print(f'\nLayer: {current_layer}')
         sub_folder = f'Layer[{current_layer}]/'
+        if not os.path.exists(save_folder + sub_folder):
+            os.mkdir(save_folder + sub_folder)
 
         error_history = []
 
@@ -150,24 +278,114 @@ def train_motor_network(simID,
             con_monitors.reset()
 
         # save error history
-        np.savetxt(save_folder + sub_folder + 'error_history.txt', np.array(error_history))
+        np.savetxt(save_folder + sub_folder + 'training_history_dl.txt', np.array(error_history))
 
 
-def run_full_network():
-    pass
+def test_network(simID,
+                 test_matrix,
+                 state_space,
+                 possible_trajectories,
+                 choose_time=sim_params['max_sim_time'],
+                 SOA_time=sim_params['SOA_time'],
+                 monitoring_test=True):
+
+    # results folder + variables
+    _, save_folder = create_results_folder(simID)
+
+    # monitoring variables
+    if monitoring_test:
+        pop_monitors = Pop_Monitor(populations=[VA, PM, latStrD1, SNr, VL, M1, latSNc] + [dPFC, S1Cortex, SNc_caud,
+                                                StrD1_caud, StrD2_caud, StrThal_caud, GPe_caud, GPi_caud],
+                                   samplingrate=10)
+
+        pop_monitors.start()
+
+    n_correct = 0
+    for test_set in test_matrix:
+
+        id_goal, id_layer = test_set
+        init_position = np.radians(model_params['moving_arm_positions'][id_layer])
+        arm = model_params['moving_arm']
+
+        # create input
+        dPFC_baseline = np.zeros(model_params['num_goals'])
+        dPFC_baseline[id_goal] = model_params['exc_dPFC']
+
+        S1_baseline = np.zeros(model_params['num_init_positions'])
+        S1_baseline[id_layer] = model_params['exc_S1']
+
+        # set baseline from input
+        dPFC.baseline = dPFC_baseline
+        S1Cortex.baseline = S1_baseline
+
+        # simulate
+        ann.simulate_until(max_duration=choose_time, population=M1)
+
+        # find most active coordinate
+        PMr = np.array(PM.r)
+        _, PM_y, PM_x = np.unravel_index(PMr.argmax(), PMr.shape)
+        PM_coordinate = state_space[PM_y, PM_x, :]
+
+        # find the most active motor plan
+        M1r = np.array(M1.r)
+        M1_layer, M1_plan = np.unravel_index(M1r.argmax(), M1r.shape)
+
+        # execute plan
+        M1_trajectory = possible_trajectories[M1_layer][M1_plan]
+        reached_position = forward_kinematic_arm(thetas=M1_trajectory + init_position,
+                                                 arm=arm,
+                                                 return_all_joint_coordinates=False)
+
+        # Does the selected trajectory reach the most active PM coordinate?
+        distance = np.linalg.norm(PM_coordinate - reached_position)
+        n_correct += distance < 5.0  # in [mm]
+
+        # SOA
+        dPFC.baseline = 0.0
+        S1Cortex.baseline = 0.0
+        ann.simulate(SOA_time)
+        ann.reset(monitors=False, populations=True)
+
+    # save monitors
+    if monitoring_test:
+        # Populations
+        pop_monitors.stop()
+        pop_monitors.save(save_folder)
 
 
-if __name__ == '__main__':
-
-    simID = sys.argv[1]
-
+def run_full_network(simID, monitors=True):
     # add connections between the dorsomedial and dorsolateral network
     add_connections()
+
+    # create state space + trajectories
+    state_space = create_state_space()
+    possible_trajectories = create_trajectories()
 
     # compiling network
     if not path.exists(compile_folder):
         makedirs(compile_folder)
     ann.compile(directory=compile_folder + f'annarchy_motorBG[{simID}]')
 
+    # run training dorsomedial network
+    train_body(simID,
+               learning_matrix=model_params['training_set'],
+               monitoring_training=monitors)
+
     # run training dorsolateral network
-    train_motor_network(simID)
+    train_motor_network(simID,
+                        state_space=state_space,
+                        possible_trajectories=possible_trajectories,
+                        monitoring_training=monitors)
+
+    # test network
+    test_network(simID,
+                 test_matrix=model_params['test_set'],
+                 possible_trajectories=possible_trajectories,
+                 state_space=state_space,
+                 monitoring_test=monitors)
+
+
+if __name__ == '__main__':
+
+    simID = sys.argv[1]
+    run_full_network(simID, monitors=False)

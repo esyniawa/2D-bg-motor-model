@@ -27,15 +27,15 @@ def STN_GPi_connection(preDim, postDim, weight=1.0):
     return w.reshape(i*j, preDim)
 
 
-def S1_STN_connection():
+def S1_STN_connection(weights=1.0):
 
     from functions import generate_weights
     from parameters import model_params
 
-    w = generate_weights(thetas=model_params['moving_arm_positions'],
-                         arm=model_params['moving_arm'])
+    w = generate_weights(thetas=model_params['resting_arm_positions'],
+                         arm=model_params['resting_arm'])
 
-    return w.T
+    return weights * w.T
 
 
 def dmThal_PM_connection(sigma, limit=None):

@@ -3,10 +3,15 @@ import os
 
 
 def create_results_folder(simID):
-    results_folder = f'results/train_motor_network[{simID}]/'
-    if not os.path.exists(results_folder):
-        os.makedirs(results_folder)
-    return results_folder
+    train_folder = f'results/BG_motor_network[{simID}]/training/'
+    test_folder = f'results/BG_motor_network[{simID}]/testing/'
+
+    if not os.path.exists(train_folder):
+        os.makedirs(train_folder)
+    if not os.path.exists(test_folder):
+        os.makedirs(test_folder)
+
+    return train_folder, test_folder
 
 
 compile_folder = 'networks/'
@@ -58,9 +63,29 @@ model_params['resting_arm_positions'] = ((0, 90),
 # number of initial positions
 model_params['num_init_positions'] = len(model_params['moving_arm_positions'])
 
+# training set for the dorsomedial loop [id_goal_input, id_goal_output (in VA)]
+model_params['training_set'] = ((0, 0),
+                                (1, 1),
+                                (2, 2),
+                                (3, 3))
+
+
+if len(model_params['training_set']) > model_params['num_goals']:
+    raise AttributeError
+
+# test set for testing the 2 loops [id_goal, id_body_position]
+model_params['test_set'] = ((0, 0),
+                            (0, 1),
+                            (0, 2))
+
 # dorsomedial
 model_params['dim_medial_Str'] = (5, 5)
 model_params['dim_medial_BG'] = (model_params['num_init_positions'], model_params['num_goals'])
+
+model_params['exc_dPFC'] = 1.0
+model_params['exc_S1'] = 1.0
+
+model_params['sig_distance_RBF_S1STN'] = 100 # in [mm]
 
 # dorsolateral
 model_params['num_trajectories'] = 16

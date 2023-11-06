@@ -5,19 +5,19 @@ BaselineNeuron = ann.Neuron(
     parameters="""
         tau_up = 1.0 : population
         tau_down = 20.0 : population
-        B = 0.0
+        baseline = 0.0
         noise = 0.0 : population
     """,
     equations="""
-        base = B + noise * Uniform(-1.0,1.0): min=0.0
-        dr/dt = if (B>0.01): (base-r)/tau_up else: -r/tau_down : min=0.0
+        base = baseline + noise * Uniform(-1.0,1.0): min=0.0
+        dr/dt = if (baseline>0.01): (base-r)/tau_up else: -r/tau_down : min=0.0
     """,
     name = "Baseline Neuron",
-    description = "Neuron with baseline to be set. ",
+    description = "Neuron with baseline to be set. "
 )
 
 LinearNeuron = ann.Neuron(
-    parameters= """
+    parameters="""
         tau = 10.0
         baseline = 0.0
         noise = 0.0
@@ -30,7 +30,7 @@ LinearNeuron = ann.Neuron(
 )
 
 LinearNeuron_trace = ann.Neuron(
-    parameters= """
+    parameters="""
         tau = 10.0
         baseline = 0.0
         noise = 0.0

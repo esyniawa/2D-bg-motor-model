@@ -30,7 +30,7 @@ def sin_space(start, stop, num):
     return x * y + start
 
 
-def gauss_wrapper(func, sigma=50.0):
+def gauss_wrapper(func, sigma=model_params['sig_distance_RBF_S1STN']):
     def wrapper(*args, **kwargs):
         res = func(*args, **kwargs)
         if isinstance(res, np.ndarray | np.generic):
