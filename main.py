@@ -1,4 +1,5 @@
 import os.path
+import random
 from os import path, makedirs
 import sys
 
@@ -21,7 +22,6 @@ def add_connections():
     VAPM_con.connect_from_matrix(weights)
 
 
-# TODO: Should return
 def learn_motor_skills(layer,
                        thal_input_array,
                        M1_trajectories,
@@ -43,11 +43,16 @@ def learn_motor_skills(layer,
     M1r_max = np.max(M1.r)
 
     if M1r_max < model_params['threshold_M1r']:
-        newM1_baseline = np.zeros(num_trajectories)
-        newM1_baseline[np.random.randint(num_trajectories)] = model_params['M1_amp']
+        # exclude false trials
+        newM1_ids = [x for x in list(range(num_trajectories)) if x not in exclude_M1_trajectories]
 
-        M1[layer, :].baseline = newM1_baseline
+        # set random M1 neuron active
+        newM1_id = random.choice(newM1_ids)
+
+        M1[layer, newM1_id].baseline = model_params['M1_amp']
         ann.simulate(learning_time)
+    else:
+        newM1_id = None
 
     # find most active coordinate
     PMr = np.array(PM.r)
@@ -64,6 +69,10 @@ def learn_motor_skills(layer,
                                              arm=arm,
                                              return_all_joint_coordinates=False)
 
+    # print(PM_coordinate)
+    # print(reached_position)
+    #
+    # print(np.max(M1r), M1_layer, M1_plan)
     # Does the selected trajectory reach the most active PM coordinate?
     distance = np.linalg.norm(PM_coordinate - reached_position)
     correct = distance < 5.0 # in [mm]
@@ -82,7 +91,7 @@ def learn_motor_skills(layer,
     ann.simulate(SOA_time)
     ann.reset(monitors=False, populations=True)
 
-    return correct, distance
+    return correct, distance, newM1_id
 
 
 def link_goals_with_bodyrep(id_goal,
@@ -251,15 +260,20 @@ def train_motor_network(simID,
 
             n_trials = 0
             n_correct = 0
+            false_trajectories = []
 
             while (n_trials < max_training_trials) & (n_correct < max_correct):
-                correct, error_distance = learn_motor_skills(layer=current_layer,
-                                                             thal_input_array=VA_input,
-                                                             M1_trajectories=possible_trajectories[current_layer],
-                                                             state_space=state_space)
+                correct, error_distance, M1_id = learn_motor_skills(layer=current_layer,
+                                                                    thal_input_array=VA_input,
+                                                                    M1_trajectories=possible_trajectories[current_layer],
+                                                                    exclude_M1_trajectories=false_trajectories,
+                                                                    state_space=state_space)
 
                 if monitoring_training:
                     con_monitors.extract_weights()
+
+                if not correct and M1_id is not None:
+                    false_trajectories.append(M1_id)
 
                 error_history.append((goal, error_distance))
                 n_correct += correct
@@ -353,7 +367,7 @@ def test_network(simID,
         pop_monitors.save(save_folder)
 
 
-def run_full_network(simID, monitors=True):
+def run_full_network(simID, monitors_training=True, monitors_test=True):
     # add connections between the dorsomedial and dorsolateral network
     add_connections()
 
@@ -367,25 +381,25 @@ def run_full_network(simID, monitors=True):
     ann.compile(directory=compile_folder + f'annarchy_motorBG[{simID}]')
 
     # run training dorsomedial network
-    train_body(simID,
-               learning_matrix=model_params['training_set'],
-               monitoring_training=monitors)
+    # train_body(simID,
+    #            learning_matrix=model_params['training_set'],
+    #            monitoring_training=monitors_training)
 
     # run training dorsolateral network
     train_motor_network(simID,
                         state_space=state_space,
                         possible_trajectories=possible_trajectories,
-                        monitoring_training=monitors)
+                        monitoring_training=monitors_training)
 
     # test network
     test_network(simID,
                  test_matrix=model_params['test_set'],
                  possible_trajectories=possible_trajectories,
                  state_space=state_space,
-                 monitoring_test=monitors)
+                 monitoring_test=monitors_test)
 
 
 if __name__ == '__main__':
 
     simID = sys.argv[1]
-    run_full_network(simID, monitors=False)
+    run_full_network(simID, monitors_training=False, monitors_test=False)

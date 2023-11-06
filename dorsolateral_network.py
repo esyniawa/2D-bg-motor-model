@@ -66,7 +66,7 @@ for init_pos in range(model_params['num_init_positions']):
     PMStrD1_putamen[init_pos].K_dip = 0.1
     PMStrD1_putamen[init_pos].K_burst = 1.2
     PMStrD1_putamen[init_pos].threshold_post = 0.1
-    PMStrD1_putamen[init_pos].threshold_pre = 0.0
+    PMStrD1_putamen[init_pos].threshold_pre = 0.1
     PMStrD1_putamen[init_pos].DA_type = 1
 
 StrD1SNr = ann.Projection(pre=latStrD1, post=SNr, target='inh')
