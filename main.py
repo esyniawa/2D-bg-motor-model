@@ -148,7 +148,7 @@ def train_body(simID,
                learning_matrix,
                num_layers=model_params['num_init_positions'],
                max_correct=5,
-               max_training_trials=100,
+               max_training_trials=50,
                monitoring_training=True):
 
     # results folder + variables
@@ -216,7 +216,7 @@ def train_motor_network(simID,
                         VA_amp=2.0,
                         num_goals=model_params['num_goals'],
                         num_layers=model_params['num_init_positions'],
-                        max_training_trials=100,
+                        max_training_trials=50,
                         max_correct=2,
                         monitoring_training=True):
 
