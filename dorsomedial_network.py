@@ -68,7 +68,7 @@ PFCdStrD1_caud.threshold_pre = 0.2
 PFCdStrD1_caud.threshold_post = 0.0
 
 StrD1GPi = ann.Projection(pre=StrD1_caud, post=GPi_caud, target='inh', synapse=DAPreCovariance_inhibitory_trace, name='StrD1GPi_caud')
-StrD1GPi.connect_all_to_all(weights=ann.Normal(0.1, 0.01)) # scale by numer of stimuli #var 0.01
+StrD1GPi.connect_all_to_all(weights=ann.Normal(0.5, 0.1)) # scale by numer of stimuli #var 0.01
 StrD1GPi.tau = 500.0 #700 #550
 StrD1GPi.regularization_threshold = 2.25 #1.5
 StrD1GPi.tau_alpha = 5.0 # 20.0
@@ -81,7 +81,7 @@ StrD1GPi.DA_type = 1
 
 # indirect pathway
 PFCdStrD2_caud = ann.Projection(pre=dPFC, post=StrD2_caud, target='exc', synapse=DAPostCovarianceNoThreshold, name='PFCdStrD2_caud')
-PFCdStrD2_caud.connect_all_to_all(weights = ann.Normal(0.12, 0.03)) #0.005
+PFCdStrD2_caud.connect_all_to_all(weights=ann.Normal(0.3, 0.1)) #0.005
 PFCdStrD2_caud.tau = 50.0
 PFCdStrD2_caud.regularization_threshold = 1.5
 PFCdStrD2_caud.tau_alpha = 15.0

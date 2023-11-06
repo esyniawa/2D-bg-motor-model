@@ -92,6 +92,7 @@ def learn_motor_skills(layer,
     return correct, distance, newM1_id
 
 
+# TODO: Test the development of weights in DA+ trials
 def link_goals_with_bodyrep(id_goal,
                             id_layer,
                             id_output_VA,
@@ -116,12 +117,14 @@ def link_goals_with_bodyrep(id_goal,
     VAr = np.array(VA.r)
     VA_layer, VA_neuron = np.unravel_index(VAr.argmax(), VAr.shape)
 
-    # print(STN_caud.r)
-    # print(StrD1_caud.r)
-    # print(GPi_caud.r)
-    # print(VAr)
-    #
+    print('direct pathway')
+    print(StrD1_caud.r)
+    print(GPi_caud.r)
+
+    # print('indirect pathway')
+    # print(StrD2_caud.r)
     # print(GPe_caud.r)
+    # print(StrThal_caud.r)
 
     if (VA_layer == id_layer) and (VA_neuron == id_output_VA):
         PPTN.baseline = 1.0
@@ -379,9 +382,9 @@ def run_full_network(simID, monitors_training=True, monitors_test=True):
     ann.compile(directory=compile_folder + f'annarchy_motorBG[{simID}]')
 
     # run training dorsomedial network
-    # train_body(simID,
-    #            learning_matrix=model_params['training_set'],
-    #            monitoring_training=monitors_training)
+    train_body(simID,
+               learning_matrix=model_params['training_set'],
+               monitoring_training=monitors_training)
 
     # run training dorsolateral network
     train_motor_network(simID,

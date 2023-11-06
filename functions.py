@@ -242,9 +242,11 @@ def rangeX(iterations):
 
 
 if __name__ == '__main__':
-    print(create_state_space().shape)
+
+    print(generate_weights(thetas=model_params['resting_arm_positions'],
+                           arm=model_params['resting_arm']))
 
     # bivariate_gauss([5, 8], 20.0, plot=True)
     print(create_trajectories(10, 10, 10))
 
-    print(list(rangeX((5,5))))
+
