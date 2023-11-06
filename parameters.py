@@ -93,7 +93,9 @@ model_params['num_trajectories'] = 16
 model_params['dim_lateral_BG'] = (model_params['num_init_positions'], model_params['num_trajectories'])
 # Threshold that M1 has to exceed to disable learning via motor babbling
 model_params['threshold_M1r'] = 0.1
-model_params['M1_amp'] = 1.0
+
+model_params['exc_M1'] = 1.0
+model_params['exc_VA'] = 3.0
 
 model_params['min_distance_possible_positions'] = 10.0 # in [mm]
 model_params['sample_sigma'] = 10.0 # in [mm]

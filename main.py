@@ -3,6 +3,8 @@ import random
 from os import path, makedirs
 import sys
 
+import numpy as np
+
 from dorsomedial_network import *
 from dorsolateral_network import *
 
@@ -49,7 +51,7 @@ def learn_motor_skills(layer,
         # set random M1 neuron active
         newM1_id = random.choice(newM1_ids)
 
-        M1[layer, newM1_id].baseline = model_params['M1_amp']
+        M1[layer, newM1_id].baseline = model_params['exc_M1']
         ann.simulate(learning_time)
     else:
         newM1_id = None
@@ -69,10 +71,6 @@ def learn_motor_skills(layer,
                                              arm=arm,
                                              return_all_joint_coordinates=False)
 
-    # print(PM_coordinate)
-    # print(reached_position)
-    #
-    # print(np.max(M1r), M1_layer, M1_plan)
     # Does the selected trajectory reach the most active PM coordinate?
     distance = np.linalg.norm(PM_coordinate - reached_position)
     correct = distance < 5.0 # in [mm]
@@ -222,7 +220,7 @@ def train_body(simID,
 def train_motor_network(simID,
                         state_space,
                         possible_trajectories,
-                        VA_amp=2.0,
+                        VA_amp=model_params['exc_VA'] ,
                         num_goals=model_params['num_goals'],
                         num_layers=model_params['num_init_positions'],
                         max_training_trials=50,
