@@ -13,7 +13,7 @@ dl_baseline_DA = 0.1
 ############# Populations #######################
 
 PM = ann.Population(name='PM', geometry=(model_params['num_init_positions'], y_dim, x_dim), neuron=LinearNeuron)
-latStrD1 = ann.Population(name='dorsolateral_StrD1', geometry=model_params['dim_lateral_BG'], neuron=LinearNeuron)
+latStrD1 = ann.Population(name='StrD1_putamen', geometry=model_params['dim_lateral_BG'], neuron=LinearNeuron)
 
 SNr = ann.Population(name='SNr', geometry=model_params['dim_lateral_BG'], neuron=LinearNeuron)
 SNr.tau = 5.0
@@ -30,7 +30,7 @@ M1.tau = 20.0
 M1.noise = 0.01
 M1.baseline = 0.0
 
-latSNc = ann.Population(name='SNc_caud', geometry=1, neuron=DopamineNeuron)
+latSNc = ann.Population(name='SNc_put', geometry=1, neuron=DopamineNeuron)
 reward = ann.Population(name='Excitatory reward population', geometry=1, neuron=LinearNeuron)
 reward_inh = ann.Population(name='Inhibitory reward population', geometry=1, neuron=LinearNeuron)
 
@@ -56,7 +56,7 @@ for init_pos in range(model_params['num_init_positions']):
                                               post=latStrD1[init_pos, :],
                                               target='exc',
                                               synapse=DAPostCovarianceNoThreshold,
-                                              name=f'PMStrD1_putamen_{init_pos}'))
+                                              name=f'PMStrD1_put_{init_pos}'))
 
     PMStrD1_putamen[init_pos].connect_all_to_all(weights=0.0)
     PMStrD1_putamen[init_pos].tau = 2200

@@ -117,24 +117,23 @@ def link_goals_with_bodyrep(id_goal,
     VAr = np.array(VA.r)
     VA_layer, VA_neuron = np.unravel_index(VAr.argmax(), VAr.shape)
 
-    print('direct pathway')
-    print(StrD1_caud.r)
-    print(GPi_caud.r)
+    # print('direct pathway')
+    # print(StrD1_caud.r)
+    # print(GPi_caud.r)
 
     # print('indirect pathway')
     # print(StrD2_caud.r)
     # print(GPe_caud.r)
     # print(StrThal_caud.r)
 
-    if (VA_layer == id_layer) and (VA_neuron == id_output_VA):
+    correct = VA_layer == id_layer and VA_neuron == id_output_VA
+    if correct:
         PPTN.baseline = 1.0
         SNc_caud.firing = 1.0
         ann.simulate(reward_time)
         # reset DA
         PPTN.baseline = 0.0
         SNc_caud.firing = 0.0
-
-        correct = 1
     else:
         PPTN.baseline = 0.0
         SNc_caud.firing = 1.0
@@ -142,8 +141,6 @@ def link_goals_with_bodyrep(id_goal,
         # reset DA
         PPTN.baseline = 0.0
         SNc_caud.firing = 0.0
-
-        correct = 0
 
     # SOA
     dPFC.baseline = 0.0
@@ -157,7 +154,7 @@ def link_goals_with_bodyrep(id_goal,
 def train_body(simID,
                learning_matrix,
                num_layers=model_params['num_init_positions'],
-               max_correct=5,
+               max_correct=3,
                max_training_trials=50,
                monitoring_training=True):
 
@@ -403,4 +400,4 @@ def run_full_network(simID, monitors_training=True, monitors_test=True):
 if __name__ == '__main__':
 
     simID = sys.argv[1]
-    run_full_network(simID, monitors_training=False, monitors_test=False)
+    run_full_network(simID, monitors_training=True, monitors_test=True)

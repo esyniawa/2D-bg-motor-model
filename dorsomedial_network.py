@@ -12,7 +12,7 @@ baseline_dopa_caud = 0.1
 # Input populations
 dPFC = ann.Population(name="dPFC", geometry=model_params['num_goals'], neuron=BaselineNeuron)
 
-S1Cortex = ann.Population(name="Primary_Somatosensory_Cortex",
+S1Cortex = ann.Population(name="S1",
                           geometry=model_params['num_init_positions'],
                           neuron=BaselineNeuron)
 
@@ -39,7 +39,7 @@ GPe_caud = ann.Population(name="GPe_caud", geometry=model_params['dim_medial_BG'
 GPe_caud.noise = 0.05
 GPe_caud.baseline = 1.0
 
-VA = ann.Population(name="Thal_caud", geometry=model_params['dim_medial_BG'], neuron=LinearNeuron)
+VA = ann.Population(name="VA", geometry=model_params['dim_medial_BG'], neuron=LinearNeuron)
 VA.noise = 0.025
 VA.baseline = 1.0
 
@@ -65,7 +65,7 @@ PFCdStrD1_caud.K_dip = 0.05
 PFCdStrD1_caud.K_burst = 1.0
 PFCdStrD1_caud.DA_type = 1
 PFCdStrD1_caud.threshold_pre = 0.2
-PFCdStrD1_caud.threshold_post = 0.0
+PFCdStrD1_caud.threshold_post = 0.5 # init 0.0
 
 StrD1GPi = ann.Projection(pre=StrD1_caud, post=GPi_caud, target='inh', synapse=DAPreCovariance_inhibitory_trace, name='StrD1GPi_caud')
 StrD1GPi.connect_all_to_all(weights=ann.Normal(0.5, 0.1)) # scale by numer of stimuli #var 0.01
