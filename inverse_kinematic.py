@@ -282,11 +282,11 @@ if __name__ == '__main__':
     test_inverse_kinematic = True
     test_self_touch = False
     test_bads = False
-    test_distance = True
+    test_distance = False
 
     if test_inverse_kinematic:
         a = inverse_kinematic_gradient_decent(end_effector=[-100, 150],
-                                              starting_angles=[0, 90],
+                                              starting_angles=[20, 110],
                                               arm='right',
                                               radians=False,
                                               do_plot=True)
