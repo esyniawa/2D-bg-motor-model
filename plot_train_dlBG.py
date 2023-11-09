@@ -47,7 +47,7 @@ def load_monitors(simID, load_VA_data=False, load_PM_data=False):
             monitors[f'rVL_{layer}'] = None
 
         try:
-            monitors[f'rM1'] = np.load(results_folder + sub_folder + f'rM1.npy')
+            monitors[f'rM1_{layer}'] = np.load(results_folder + sub_folder + f'rM1.npy')
         except:
             print(f'M1 data for layer {layer} is missing.')
             monitors[f'rM1_{layer}'] = None
@@ -91,7 +91,7 @@ if __name__ == '__main__':
     import os
     from parameters import model_params
 
-    simID = 1
+    simID = 0
 
     figures_folder = f'figures/train_motor_network[{simID}]/'
     if not os.path.exists(figures_folder):
@@ -141,7 +141,7 @@ if __name__ == '__main__':
         
         # DA Prediction Error
         ax = fig.add_subplot(1, 2, 2)
-        lw_DA = ax.plot(weights[f'DAprediction'][:, 0, :])
+        lw_DA = ax.plot(weights[f'DAprediction_{layer}'][:, 0, :])
 
         plt.savefig(figures_folder + f'BG_weights_train_dl[{layer}].pdf')
         plt.close()

@@ -117,14 +117,19 @@ def link_goals_with_bodyrep(id_goal,
     VAr = np.array(VA.r)
     VA_layer, VA_neuron = np.unravel_index(VAr.argmax(), VAr.shape)
 
-    # print('direct pathway')
-    # print(StrD1_caud.r)
-    # print(GPi_caud.r)
+    print(dPFC.r)
+    print(STN_caud.r)
+    print('direct pathway')
+    print(StrD1_caud.r)
+    print(GPi_caud.r)
 
-    # print('indirect pathway')
-    # print(StrD2_caud.r)
-    # print(GPe_caud.r)
-    # print(StrThal_caud.r)
+    print('indirect pathway')
+    # print(dPFC.r)
+    print(StrD2_caud.r)
+    print(GPe_caud.r)
+    print(StrThal_caud.r)
+    # print(VA_layer, VA_neuron)
+    print(VA.r)
 
     correct = VA_layer == id_layer and VA_neuron == id_output_VA
     if correct:
@@ -181,7 +186,7 @@ def train_body(simID,
 
         error_history = []
 
-        for current_layer in range(num_layers):
+        for current_layer in range(1):
 
             n_trials = 0
             n_correct = 0
@@ -381,20 +386,22 @@ def run_full_network(simID, monitors_training=True, monitors_test=True):
     # run training dorsomedial network
     train_body(simID,
                learning_matrix=model_params['training_set'],
-               monitoring_training=monitors_training)
+               monitoring_training=monitors_training,
+               max_training_trials=30,
+               max_correct=5)
 
     # run training dorsolateral network
-    train_motor_network(simID,
-                        state_space=state_space,
-                        possible_trajectories=possible_trajectories,
-                        monitoring_training=monitors_training)
-
-    # test network
-    test_network(simID,
-                 test_matrix=model_params['test_set'],
-                 possible_trajectories=possible_trajectories,
-                 state_space=state_space,
-                 monitoring_test=monitors_test)
+    # train_motor_network(simID,
+    #                     state_space=state_space,
+    #                     possible_trajectories=possible_trajectories,
+    #                     monitoring_training=monitors_training)
+    #
+    # # test network
+    # test_network(simID,
+    #              test_matrix=model_params['test_set'],
+    #              possible_trajectories=possible_trajectories,
+    #              state_space=state_space,
+    #              monitoring_test=monitors_test)
 
 
 if __name__ == '__main__':

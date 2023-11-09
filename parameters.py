@@ -43,7 +43,7 @@ state_space_limits = {
 model_params = {}
 
 # relative positions of the goal on the forearm
-model_params['rel_position_goal'] = (0.25, 0.5, 0.75, 1.0)   # must be <= 1.0
+model_params['rel_position_goal'] = (0.25, 0.5, 0.75)   # must be <= 1.0
 model_params['num_goals'] = len(model_params['rel_position_goal'])
 
 # moving arm parameters
@@ -64,10 +64,7 @@ model_params['resting_arm_positions'] = ((0, 90),
 model_params['num_init_positions'] = len(model_params['moving_arm_positions'])
 
 # training set for the dorsomedial loop [id_goal_input, id_goal_output (in VA)]
-model_params['training_set'] = ((0, 0),
-                                (1, 1),
-                                (2, 2),
-                                (3, 3))
+model_params['training_set'] = ((0, 0),)
 
 
 if len(model_params['training_set']) > model_params['num_goals']:

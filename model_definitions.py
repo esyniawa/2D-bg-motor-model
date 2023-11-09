@@ -57,7 +57,7 @@ DopamineNeuron = ann.Neuron(
         ex_in = if (sum(exc)>exc_threshold): 1 else: 0
         s_inh = sum(inh)
         aux =   if (firing>0): 
-                    (ex_in)*(pos(1.0-baseline-s_inh) + baseline) + (1-ex_in)*(-factor_inh*sum(inh)+baseline)  
+                    (ex_in)*(pos(1.0-baseline-s_inh) + baseline) + (1-ex_in)*(-factor_inh*sum(inh))  
                 else: baseline
         tau*dmp/dt + mp =  aux
         r = if (mp>0.0): mp else: 0.0
@@ -101,8 +101,8 @@ DAPostCovarianceNoThreshold = ann.Synapse(
     """
 )
 
-# Inhibitory synapses SNr -> SNr and STRD2 -> GPe
-DAPreCovariance_inhibitory_trace = ann.Synapse(
+# Inhibitory synapses STRD1 -> SNr and STRD2 -> GPe
+DAPreCovariance_inhibitory = ann.Synapse(
     parameters="""
     tau=1000.0
     tau_alpha=10.0
@@ -113,14 +113,14 @@ DAPreCovariance_inhibitory_trace = ann.Synapse(
     DA_type= 1
     threshold_pre=0.0
     threshold_post=0.0
-    negterm=1.0
+    negterm = 1
     """,
     equations="""
-        tau_alpha*dalpha/dt = pos(-post.mp - regularization_threshold) - alpha
+        tau_alpha*dalpha/dt = pos( -post.mp - regularization_threshold) - alpha
         dopa_sum = 2.0*(post.sum(dopa) - baseline_dopa)
-        trace = pos(pre.trace - mean(pre.trace) - threshold_pre) * (mean(post.r) - post.r  - threshold_post)
+        trace = pos(pre.r - mean(pre.r) - threshold_pre) * (mean(post.r) - post.r  - threshold_post)
         aux = if (trace>0): negterm else: 0
-        dopa_mod = if (DA_type*dopa_sum>0): K_burst*dopa_sum else: aux*DA_type*K_dip*dopa_sum
+        dopa_mod = if (DA_type*dopa_sum>0): DA_type*K_burst*dopa_sum else: aux*DA_type*K_dip*dopa_sum
         delta = dopa_mod * trace - alpha * pos(trace)
         tau*dw/dt = delta : min=0
     """

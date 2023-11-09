@@ -152,7 +152,6 @@ def check_relation_statespace_jointangles(starting_joint_angles,
                                           joint_to_touch, # 0 = head -> shoulder; 1 = shoulder -> elbow; 2 = elbow -> hand
                                           num,
                                           radians=True,
-                                          do_plot=False,
                                           delta_shoulder=0):
 
     x_space = np.linspace(0,1, num)
@@ -280,7 +279,7 @@ def check_limits(thetas, radians=True):
 
 
 if __name__ == '__main__':
-    test_inverse_kinematic = False
+    test_inverse_kinematic = True
     test_self_touch = False
     test_bads = False
     test_distance = True
@@ -308,3 +307,13 @@ if __name__ == '__main__':
                                      starting_angles=[20, 110],
                                      arm='left',
                                      radians=False))
+
+    if test_distance:
+        check_relation_statespace_jointangles(
+            starting_joint_angles=[20, 110],
+            resting_joint_angles=[90, 90],
+            resting_arm='left',
+            joint_to_touch=2,  # 0 = head -> shoulder; 1 = shoulder -> elbow; 2 = elbow -> hand
+            num=10,
+            radians=False,
+            delta_shoulder=0)

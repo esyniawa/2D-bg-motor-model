@@ -32,7 +32,7 @@ STN_caud.noise = 0.01
 STN_caud.lesion = 1.0
 
 GPi_caud = ann.Population(name="GPi_caud", geometry=model_params['dim_medial_BG'], neuron=LinearNeuron)
-GPi_caud.noise = 0.05
+GPi_caud.noise = 0.01
 GPi_caud.baseline = 1.9
 
 GPe_caud = ann.Population(name="GPe_caud", geometry=model_params['dim_medial_BG'], neuron=LinearNeuron)
@@ -59,15 +59,15 @@ PFCdStrD1_caud = ann.Projection(pre=dPFC, post=StrD1_caud, target='exc', synapse
 PFCdStrD1_caud.connect_all_to_all(weights=ann.Normal(0.5, 0.2))
 PFCdStrD1_caud.tau = 100.0 #100
 PFCdStrD1_caud.regularization_threshold = 2.0
-PFCdStrD1_caud.tau_alpha = 5.0
+PFCdStrD1_caud.tau_alpha = 10.0
 PFCdStrD1_caud.baseline_dopa = baseline_dopa_caud
-PFCdStrD1_caud.K_dip = 0.05
+PFCdStrD1_caud.K_dip = 0.5
 PFCdStrD1_caud.K_burst = 1.0
 PFCdStrD1_caud.DA_type = 1
-PFCdStrD1_caud.threshold_pre = 0.2
-PFCdStrD1_caud.threshold_post = 0.5 # init 0.0
+PFCdStrD1_caud.threshold_pre = 0.0
+PFCdStrD1_caud.threshold_post = 0.2 # init 0.0
 
-StrD1GPi = ann.Projection(pre=StrD1_caud, post=GPi_caud, target='inh', synapse=DAPreCovariance_inhibitory_trace, name='StrD1GPi_caud')
+StrD1GPi = ann.Projection(pre=StrD1_caud, post=GPi_caud, target='inh', synapse=DAPreCovariance_inhibitory, name='StrD1GPi_caud')
 StrD1GPi.connect_all_to_all(weights=ann.Normal(0.5, 0.1)) # scale by numer of stimuli #var 0.01
 StrD1GPi.tau = 500.0 #700 #550
 StrD1GPi.regularization_threshold = 2.25 #1.5
@@ -75,31 +75,31 @@ StrD1GPi.tau_alpha = 5.0 # 20.0
 StrD1GPi.baseline_dopa = baseline_dopa_caud
 StrD1GPi.K_dip = 0.9
 StrD1GPi.K_burst = 1.0
-StrD1GPi.threshold_post = 0.3 #0.1 #0.3
-StrD1GPi.threshold_pre = 0.05 # 0.15
+StrD1GPi.threshold_post = 0.0 #0.1 #0.3
+StrD1GPi.threshold_pre = 0.1 # 0.15
 StrD1GPi.DA_type = 1
 
 # indirect pathway
 PFCdStrD2_caud = ann.Projection(pre=dPFC, post=StrD2_caud, target='exc', synapse=DAPostCovarianceNoThreshold, name='PFCdStrD2_caud')
-PFCdStrD2_caud.connect_all_to_all(weights=ann.Normal(0.3, 0.1)) #0.005
+PFCdStrD2_caud.connect_all_to_all(weights=ann.Normal(0.4, 0.2)) #0.005
 PFCdStrD2_caud.tau = 50.0
-PFCdStrD2_caud.regularization_threshold = 1.5
-PFCdStrD2_caud.tau_alpha = 15.0
+PFCdStrD2_caud.regularization_threshold = 1.0
+PFCdStrD2_caud.tau_alpha = 20.0
 PFCdStrD2_caud.baseline_dopa = baseline_dopa_caud
 PFCdStrD2_caud.K_dip = 0.2
-PFCdStrD2_caud.K_burst = 1.0
+PFCdStrD2_caud.K_burst = 2.0 # init 1.0
 PFCdStrD2_caud.DA_type = -1
-PFCdStrD2_caud.threshold_pre = 0.05
-PFCdStrD2_caud.threshold_post = 0.05
+PFCdStrD2_caud.threshold_pre = 0.0
+PFCdStrD2_caud.threshold_post = 0.0
 
-StrD2GPe = ann.Projection(pre=StrD2_caud, post=GPe_caud, target='inh', synapse=DAPreCovariance_inhibitory_trace, name='StrD2GPe_caud')
-StrD2GPe.connect_all_to_all(weights=0.01)
+StrD2GPe = ann.Projection(pre=StrD2_caud, post=GPe_caud, target='inh', synapse=DAPreCovariance_inhibitory, name='StrD2GPe_caud')
+StrD2GPe.connect_all_to_all(weights=0.0)
 StrD2GPe.tau = 50.0
 StrD2GPe.regularization_threshold = 1.5
 StrD2GPe.tau_alpha = 20.0
 StrD2GPe.baseline_dopa = baseline_dopa_caud
-StrD2GPe.K_dip = 0.1
-StrD2GPe.K_burst = 1.2
+StrD2GPe.K_dip = 0.2
+StrD2GPe.K_burst = 2.0
 StrD2GPe.threshold_post = 0.0
 StrD2GPe.threshold_pre = 0.1
 StrD2GPe.DA_type = -1
@@ -122,7 +122,7 @@ STNGPi_caud.connect_from_matrix(STNGPi_weights)
 
 # connection to output nuclei
 GPiVA = ann.Projection(pre=GPi_caud, post=VA, target='inh', name='GPiVA_caud')
-GPiVA.connect_one_to_one(weights=1.0)
+GPiVA.connect_one_to_one(weights=0.8)
 
 # DA release
 PPTNSNc_caud = ann.Projection(pre=PPTN, post=SNc_caud, target='exc', name='PPTNSNc_caud')
@@ -153,10 +153,10 @@ StrD1SNc_caud.tau = 3000
 
 # FB connections (all weights not fitted)
 VAStrThal = ann.Projection(pre=VA, post=StrThal_caud, target='exc', name='VAStrThal')
-VAStrThal.connect_one_to_one(weights=0.5)
+VAStrThal.connect_one_to_one(weights=1.0)
 
 StrThalGPi_caud = ann.Projection(pre=StrThal_caud, post=GPi_caud, target='inh', name='StrThalGPi_caud')
-StrThalGPi_caud.connect_one_to_one(weights=0.2)
+StrThalGPi_caud.connect_one_to_one(weights=0.1)
 
 StrThalGPe_caud = ann.Projection(pre=StrThal_caud, post=GPe_caud, target='inh', name='StrThalGPe_caud')
 StrThalGPe_caud.connect_one_to_one(weights=0.5)
@@ -164,10 +164,10 @@ StrThalGPe_caud.connect_one_to_one(weights=0.5)
 # Lateral connections
 # Striatum
 StrD2StrD2_caud = ann.Projection(pre=StrD2_caud, post=StrD2_caud, target='inh')
-StrD2StrD2_caud.connect_all_to_all(weights=0.2)
+StrD2StrD2_caud.connect_all_to_all(weights=0.1)
 
 StrD1StrD1_caud = ann.Projection(pre=StrD1_caud, post=StrD1_caud, target='inh')
-StrD1StrD1_caud.connect_all_to_all(weights=0.2)
+StrD1StrD1_caud.connect_all_to_all(weights=0.4)
 
 # other laterals layerwise
 w_caud_laterals = laterals_layerwise(preDim=model_params['dim_medial_BG'], postDim=model_params['dim_medial_BG'])

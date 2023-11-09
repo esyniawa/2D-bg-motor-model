@@ -59,8 +59,8 @@ for init_pos in range(model_params['num_init_positions']):
                                               name=f'PMStrD1_put_{init_pos}'))
 
     PMStrD1_putamen[init_pos].connect_all_to_all(weights=0.0)
-    PMStrD1_putamen[init_pos].tau = 2200
-    PMStrD1_putamen[init_pos].regularization_threshold = 1.2
+    PMStrD1_putamen[init_pos].tau = 200.0
+    PMStrD1_putamen[init_pos].regularization_threshold = 2.0
     PMStrD1_putamen[init_pos].tau_alpha = 20.0
     PMStrD1_putamen[init_pos].baseline_dopa = 0.1
     PMStrD1_putamen[init_pos].K_dip = 0.1

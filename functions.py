@@ -24,7 +24,7 @@ def sin_space(start, stop, num):
 
     x = np.sin(np.linspace(0, np.pi/2, num, endpoint=True))
 
-    # uniform linspace
+    # linear space
     y = np.linspace(0, offset, num, endpoint=True)
 
     return x * y + start

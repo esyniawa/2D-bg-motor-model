@@ -82,3 +82,7 @@ def plot_w_training_dm(simID, goal, cons, save_name=None):
 
     plt.show()
 
+if __name__ == '__main__':
+    plot_rates_training_dm(0, 0, ['PFC', 'StrD1', 'GPi', 'VA', 'SNc'], save_name='direct_Test_trial_complete_1.png')
+    plot_rates_training_dm(0, 0, ['PFC', 'StrD2', 'GPe', 'StrThal', 'VA', 'SNc'], save_name='indirect_Test_trial_complete_1.png')
+    plot_w_training_dm(0, 0, ['PFC', 'GPe', 'GPi'], save_name='Test_trial_wDA+_2.png')
