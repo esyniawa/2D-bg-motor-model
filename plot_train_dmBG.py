@@ -82,7 +82,95 @@ def plot_w_training_dm(simID, goal, cons, save_name=None):
 
     plt.show()
 
+
+def plot_w_matrix_training(simID, goal, save_name=None):
+    import matplotlib.pyplot as plt
+    from parameters import create_results_folder
+
+    weights = load_monitors(simID, goal, 'w')
+
+    direct_pathway_cons = ['PFCdStrD1', 'StrD1GPi']
+    keys_direct = []
+    for con in direct_pathway_cons:
+        keys_direct.extend([key for key in weights.keys() if con in key])
+
+    indirect_pathway_cons = ['PFCdStrD2', 'StrD2GPe']
+    keys_indirect = []
+    for con in indirect_pathway_cons:
+        keys_indirect.extend([key for key in weights.keys() if con in key])
+
+    # plotting
+    timestamps = [0, weights[keys_direct[0]].shape[0]//2, weights[keys_direct[0]].shape[0]]
+    nt = len(timestamps)
+
+    scal = 2.0
+    fig = plt.figure(num=5, figsize=(20, 12))
+    for i, timestamp in enumerate(timestamps):
+        print(weights[keys_direct[0]].shape)
+        print(weights[keys_direct[1]].shape)
+
+        w1 = np.transpose(weights[keys_direct[0]][timestamp - 1, :, :])
+        w2 = np.transpose(weights[keys_direct[1]][timestamp - 1, :, :])
+        w_direct = np.matmul(w1, w2)
+
+        w1 = np.transpose(weights[keys_indirect[0]][timestamp - 1, :, :])
+        w2 = np.transpose(weights[keys_indirect[1]][timestamp - 1, :, :])
+        w_indirect = np.matmul(w1, w2)
+
+        plt.figtext(0.05, 1. - 0.26 * ((i + 1)), f"Trial = {timestamp}", fontsize=22, ha='center')
+
+        # direct pathway
+        plt.subplot(nt, 2, i * 2 + 1)
+        pcm = plt.imshow(w_direct, vmin=0, vmax=scal, cmap='Purples')
+        plt.ylabel('dPFC')
+        plt.xlabel('GPi')
+        plt.xticks([])
+        plt.yticks([])
+        if i == 0:
+            plt.title('Direct pathway:', fontsize=28)
+        if i == nt - 1:
+            ax = fig.gca()
+            cax = ax.inset_axes([0.1, -0.3, 0.8, 0.1], transform=ax.transAxes)
+            cbar = fig.colorbar(pcm, ax=ax, cax=cax, ticks=[0, scal], orientation='horizontal')
+            cbar.ax.tick_params(labelsize=24)
+
+        # lines
+        plt.plot([2.5, 2.5], [-0.5, 2.5], color='gray', linewidth=3)
+        plt.plot([5.5, 5.5], [-0.5, 2.5], color='gray', linewidth=3)
+
+        # indirect pathway
+        plt.subplot(nt, 2, i * 2 + 2)
+        pcm = plt.imshow(w_indirect, vmin=0, vmax=scal, cmap='Purples')
+        plt.ylabel('dPFC')
+        plt.xlabel('GPe')
+        plt.xticks([])
+        plt.yticks([])
+        if i == 0:
+            plt.title('Indirect pathway:', fontsize=28)
+        if i == nt - 1:
+            ax = fig.gca()
+            cax = ax.inset_axes([0.1, -0.3, 0.8, 0.1], transform=ax.transAxes)
+            cbar = fig.colorbar(pcm, ax=ax, cax=cax, ticks=[0, scal], orientation='horizontal')
+            cbar.ax.tick_params(labelsize=24)
+
+        # lines
+        plt.plot([2.5, 2.5], [-0.5, 2.5], color='gray', linewidth=3)
+        plt.plot([5.5, 5.5], [-0.5, 2.5], color='gray', linewidth=3)
+
+    # save
+    if save_name is not None:
+        results_folder, _ = create_results_folder(simID)
+        save_folder = 'figures/' + results_folder.split(os.sep)[1]
+        if not os.path.exists(save_folder):
+            os.makedirs(save_folder)
+
+        plt.savefig(save_folder + '/' + save_name)
+
+    plt.show()
+
+
 if __name__ == '__main__':
-    plot_rates_training_dm(0, 0, ['PFC', 'StrD1', 'GPi', 'VA', 'SNc'], save_name='direct_Test_trial_complete_1.png')
-    plot_rates_training_dm(0, 0, ['PFC', 'StrD2', 'GPe', 'StrThal', 'VA', 'SNc'], save_name='indirect_Test_trial_complete_1.png')
-    plot_w_training_dm(0, 0, ['PFC', 'GPe', 'GPi'], save_name='Test_trial_wDA+_2.png')
+    # plot_rates_training_dm(0, 0, ['PFC', 'StrD1', 'GPi', 'VA', 'SNc'], save_name='direct_Test_trial_complete_1.png')
+    # plot_rates_training_dm(0, 0, ['PFC', 'StrD2', 'GPe', 'StrThal', 'VA', 'SNc'], save_name='indirect_Test_trial_complete_1.png')
+    # plot_w_training_dm(0, 0, ['PFC', 'GPe', 'GPi'], save_name='Test_trial_wDA+_2.png')
+    plot_w_matrix_training(0, 0)
