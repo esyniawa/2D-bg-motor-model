@@ -117,17 +117,17 @@ def plot_w_matrix_training(simID, goal, save_name=None):
         w2 = np.transpose(weights[keys_indirect[1]][timestamp - 1, :, :])
         w_indirect = np.matmul(w1, w2)
 
-        plt.figtext(0.05, 1. - 0.26 * ((i + 1)), f"Trial = {timestamp}", fontsize=22, ha='center')
+        plt.figtext(0.05, 0.75 - 0.2725 * i, f"Trial = {timestamp}", fontsize=18, ha='center')
 
         # direct pathway
         plt.subplot(nt, 2, i * 2 + 1)
         pcm = plt.imshow(w_direct, vmin=0, vmax=scal, cmap='Purples')
-        plt.ylabel('dPFC')
-        plt.xlabel('GPi')
+        plt.ylabel('dPFC', fontsize=16)
+        plt.xlabel('GPi', fontsize=16)
         plt.xticks([])
         plt.yticks([])
         if i == 0:
-            plt.title('Direct pathway:', fontsize=28)
+            plt.title('Direct pathway:', fontsize=20)
         if i == nt - 1:
             ax = fig.gca()
             cax = ax.inset_axes([0.1, -0.3, 0.8, 0.1], transform=ax.transAxes)
@@ -135,18 +135,18 @@ def plot_w_matrix_training(simID, goal, save_name=None):
             cbar.ax.tick_params(labelsize=24)
 
         # lines
-        plt.plot([2.5, 2.5], [-0.5, 2.5], color='gray', linewidth=3)
-        plt.plot([5.5, 5.5], [-0.5, 2.5], color='gray', linewidth=3)
+        plt.plot([2.5, 2.5], [-0.5, 2.5], color='black', linewidth=1)
+        plt.plot([5.5, 5.5], [-0.5, 2.5], color='black', linewidth=1)
 
         # indirect pathway
         plt.subplot(nt, 2, i * 2 + 2)
         pcm = plt.imshow(w_indirect, vmin=0, vmax=scal, cmap='Purples')
-        plt.ylabel('dPFC')
-        plt.xlabel('GPe')
+        plt.ylabel('dPFC', fontsize=16)
+        plt.xlabel('GPe', fontsize=16)
         plt.xticks([])
         plt.yticks([])
         if i == 0:
-            plt.title('Indirect pathway:', fontsize=28)
+            plt.title('Indirect pathway:', fontsize=20)
         if i == nt - 1:
             ax = fig.gca()
             cax = ax.inset_axes([0.1, -0.3, 0.8, 0.1], transform=ax.transAxes)
@@ -154,8 +154,8 @@ def plot_w_matrix_training(simID, goal, save_name=None):
             cbar.ax.tick_params(labelsize=24)
 
         # lines
-        plt.plot([2.5, 2.5], [-0.5, 2.5], color='gray', linewidth=3)
-        plt.plot([5.5, 5.5], [-0.5, 2.5], color='gray', linewidth=3)
+        plt.plot([2.5, 2.5], [-0.5, 2.5], color='black', linewidth=1)
+        plt.plot([5.5, 5.5], [-0.5, 2.5], color='black', linewidth=1)
 
     # save
     if save_name is not None:
@@ -174,3 +174,4 @@ if __name__ == '__main__':
     # plot_rates_training_dm(0, 0, ['PFC', 'StrD2', 'GPe', 'StrThal', 'VA', 'SNc'], save_name='indirect_Test_trial_complete_1.png')
     # plot_w_training_dm(0, 0, ['PFC', 'GPe', 'GPi'], save_name='Test_trial_wDA+_2.png')
     plot_w_matrix_training(0, 0)
+    
