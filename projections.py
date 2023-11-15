@@ -51,12 +51,12 @@ def dmThal_PM_connection(sigma, limit=None):
     y_dim, x_dim, _ = create_state_space().shape
 
     # I wish that could be prettier
-    w = np.empty((dim_thal, dim_body_maps, x_dim, y_dim, dim_body_maps))
+    w = np.empty((dim_body_maps, y_dim, x_dim, dim_body_maps, dim_thal))
     for i, init_position in enumerate(goals):
         for j, goal in enumerate(init_position):
-            w[j, i, :, :, i] = bivariate_gauss(mu_index=goal, sigma=sigma, norm=True, limit=limit).T
+            # you have to reverse the goal arrays, bc goal_id = [x, y]
+            w[i, :, :, i, j] = bivariate_gauss(mu_index=goal[::-1], sigma=sigma, norm=True, limit=limit)
 
-    w = w.T
     return w.reshape(y_dim * x_dim * dim_body_maps, dim_thal * dim_body_maps)
 
 

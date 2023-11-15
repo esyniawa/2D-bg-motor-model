@@ -31,7 +31,7 @@ def sin_space(start, stop, num):
     return x * y + start
 
 
-def gauss_wrapper(func, sigma=model_params['sig_distance_RBF_S1STN']):
+def gauss_wrapper(func, sigma=model_params['sd_distance_RBF_S1STN']):
     def wrapper(*args, **kwargs):
         res = func(*args, **kwargs)
         if isinstance(res, np.ndarray | np.generic):
@@ -135,13 +135,13 @@ def create_trajectories(num=model_params['num_trajectories'],
         np.random.seed()
 
     state_space = create_state_space()
-    goal_ids = return_goal_indeces()
+    goal_ids = return_goal_indeces() # [y, x]
     goal_trajectories = np.zeros((model_params['num_init_positions'], model_params['num_goals'], 2))
 
     # add deriviates of theta
     for i, init_pos in enumerate(goal_ids):
         for j, goal_id in enumerate(init_pos):
-            coordinate = state_space[goal_id[0], goal_id[1], :]
+            coordinate = state_space[goal_id[1], goal_id[0], :]
             new_theta, _ = inverse_kinematic_gradient_decent(end_effector=coordinate,
                                                              starting_angles=model_params['moving_arm_positions'][i],
                                                              arm=model_params['moving_arm'],
@@ -247,7 +247,8 @@ if __name__ == '__main__':
     print(generate_weights(thetas=model_params['resting_arm_positions'],
                            arm=model_params['resting_arm']))
 
-    # bivariate_gauss([5, 8], 20.0, plot=True)
+    bivariate_gauss([5, 8], 20.0, plot=True)
+
     print(create_trajectories(10, 10, 10))
 
 
