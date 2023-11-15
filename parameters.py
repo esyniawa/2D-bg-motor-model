@@ -82,14 +82,16 @@ model_params['dim_medial_BG'] = (model_params['num_init_positions'], model_param
 model_params['exc_dPFC'] = 1.0
 model_params['exc_S1'] = 1.0
 
-model_params['sig_distance_RBF_S1STN'] = 100 # in [mm]
+model_params['sd_distance_RBF_S1STN'] = 100 # in [mm]
 
 # dorsolateral
 model_params['num_trajectories'] = 16
 
+# projection between VA and PM
+model_params['bivariate_gauss_sigma'] = 30
 model_params['dim_lateral_BG'] = (model_params['num_init_positions'], model_params['num_trajectories'])
 # Threshold that M1 has to exceed to disable learning via motor babbling
-model_params['threshold_M1r'] = 0.1
+model_params['threshold_M1r'] = 0.2
 
 model_params['exc_M1'] = 1.0
 model_params['exc_VA'] = 3.0

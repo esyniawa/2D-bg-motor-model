@@ -17,10 +17,10 @@ from functions import create_state_space, create_trajectories
 from monitoring import Pop_Monitor, Con_Monitor
 
 
-def add_connections():
+def add_connections(sigma=model_params['bivariate_gauss_sigma']):
     # adds the connection between both networks
     VAPM_con = ann.Projection(pre=VA, post=PM, target='exc')
-    weights = dmThal_PM_connection(sigma=10)
+    weights = dmThal_PM_connection(sigma=sigma)
     VAPM_con.connect_from_matrix(weights)
 
 
@@ -38,6 +38,7 @@ def learn_motor_skills(layer,
     init_position = np.radians(model_params['moving_arm_positions'][layer])
     arm = model_params['moving_arm']
 
+    # dPFC.baseline = thal_input_array/2.0
     VA[layer, :].baseline = thal_input_array
     ann.simulate_until(max_duration=choose_time, population=M1)
 
@@ -58,7 +59,8 @@ def learn_motor_skills(layer,
 
     # find most active coordinate
     PMr = np.array(PM.r)
-    _, PM_y, PM_x = np.unravel_index(PMr.argmax(), PMr.shape)
+    PM_layer, PM_y, PM_x = np.unravel_index(PMr.argmax(), PMr.shape)
+
     PM_coordinate = state_space[PM_y, PM_x, :]
 
     # find the most active motor plan
@@ -86,6 +88,8 @@ def learn_motor_skills(layer,
 
     VA.baseline = 0.0
     M1.baseline = 0.0
+    # dPFC.baseline = 0.0
+
     ann.simulate(SOA_time)
     ann.reset(monitors=False, populations=True)
 
@@ -117,19 +121,17 @@ def link_goals_with_bodyrep(id_goal,
     VAr = np.array(VA.r)
     VA_layer, VA_neuron = np.unravel_index(VAr.argmax(), VAr.shape)
 
-    print(dPFC.r)
-    print(STN_caud.r)
-    print('direct pathway')
-    print(StrD1_caud.r)
-    print(GPi_caud.r)
-
-    print('indirect pathway')
     # print(dPFC.r)
-    print(StrD2_caud.r)
-    print(GPe_caud.r)
-    print(StrThal_caud.r)
-    # print(VA_layer, VA_neuron)
-    print(VA.r)
+    # print(STN_caud.r)
+    # print('direct pathway')
+    # print(StrD1_caud.r)
+    # print(GPi_caud.r)
+    #
+    # print('indirect pathway')
+    # print(StrD2_caud.r)
+    # print(GPe_caud.r)
+    # print(StrThal_caud.r)
+    # print(VA.r)
 
     correct = VA_layer == id_layer and VA_neuron == id_output_VA
     if correct:
@@ -228,7 +230,7 @@ def train_motor_network(simID,
                         VA_amp=model_params['exc_VA'] ,
                         num_goals=model_params['num_goals'],
                         num_layers=model_params['num_init_positions'],
-                        max_training_trials=50,
+                        max_training_trials=20,
                         max_correct=2,
                         monitoring_training=True):
 
@@ -237,7 +239,7 @@ def train_motor_network(simID,
 
     # monitoring variables
     if monitoring_training:
-        pop_monitors = Pop_Monitor([VA, PM, latStrD1, SNr, VL, M1, latSNc], samplingrate=10)
+        pop_monitors = Pop_Monitor([dPFC, VA, PM, latStrD1, SNr, VL, M1, latSNc], samplingrate=10)
         con_monitors = Con_Monitor([StrD1SNc_put,] + [Connection for Connection in PMStrD1_putamen])
 
     print('---------------------------')
@@ -384,18 +386,18 @@ def run_full_network(simID, monitors_training=True, monitors_test=True):
     ann.compile(directory=compile_folder + f'annarchy_motorBG[{simID}]')
 
     # run training dorsomedial network
-    train_body(simID,
-               learning_matrix=model_params['training_set'],
-               monitoring_training=monitors_training,
-               max_training_trials=30,
-               max_correct=5)
+    # train_body(simID,
+    #            learning_matrix=model_params['training_set'],
+    #            monitoring_training=monitors_training,
+    #            max_training_trials=30,
+    #            max_correct=5)
 
     # run training dorsolateral network
-    # train_motor_network(simID,
-    #                     state_space=state_space,
-    #                     possible_trajectories=possible_trajectories,
-    #                     monitoring_training=monitors_training)
-    #
+    train_motor_network(simID,
+                        state_space=state_space,
+                        possible_trajectories=possible_trajectories,
+                        monitoring_training=monitors_training)
+
     # # test network
     # test_network(simID,
     #              test_matrix=model_params['test_set'],
