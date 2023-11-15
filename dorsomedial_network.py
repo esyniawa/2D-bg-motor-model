@@ -109,10 +109,9 @@ GPeGPi.connect_one_to_one(weights=1.0)
 
 # hyperdirect pathway
 S1STN_caud = ann.Projection(pre=S1Cortex, post=STN_caud, target='exc', name='S1STN_caud')
-S1STN_caud.connect_one_to_one(weights=0.3)
-
-# S1STN_weights = S1_STN_connection(weights=0.3)
-# S1STN_caud.connect_from_matrix(S1STN_weights)
+# S1STN_caud.connect_one_to_one(weights=0.3)
+S1STN_weights = S1_STN_connection(weights=0.3)
+S1STN_caud.connect_from_matrix(S1STN_weights)
 
 STNGPi_caud = ann.Projection(pre=STN_caud, post=GPi_caud, target='exc', name='STNGPi_caud')
 STNGPi_weights = STN_GPi_connection(preDim=model_params['num_init_positions'],
@@ -183,5 +182,5 @@ GPeGPe = ann.Projection(pre=GPe_caud, post=GPe_caud, target='inh')
 GPeGPe.connect_from_matrix(0.1 * w_caud_laterals)
 
 VAVA = ann.Projection(pre=VA, post=VA, target='inh')
-VAVA.connect_from_matrix(0.1 * w_caud_laterals)
+VAVA.connect_all_to_all(0.4)
 
