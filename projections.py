@@ -44,15 +44,15 @@ def dmThal_PM_connection(sigma, limit=None):
     This custom connection maps the different goals to limb positions in the state space. The certainty of the position
     is modulated by a bivariate gaussian. The variance can be passed to the function with the parameter sigma.
     """
-    from functions import bivariate_gauss, create_state_space, return_goal_indeces
+    from functions import bivariate_gauss, create_state_space, return_tactile_indeces
 
-    goals = return_goal_indeces()
-    dim_body_maps, dim_thal, _ = goals.shape
+    points = return_tactile_indeces()
+    dim_body_maps, dim_thal, _ = points.shape
     y_dim, x_dim, _ = create_state_space().shape
 
     # I wish that could be prettier
     w = np.empty((dim_body_maps, y_dim, x_dim, dim_body_maps, dim_thal))
-    for i, init_position in enumerate(goals):
+    for i, init_position in enumerate(points):
         for j, goal in enumerate(init_position):
             # you have to reverse the goal arrays, bc goal_id = [x, y]
             w[i, :, :, i, j] = bivariate_gauss(mu_index=goal[::-1], sigma=sigma, norm=True, limit=limit)
@@ -76,6 +76,21 @@ def laterals_layerwise(preDim, postDim, weight=1.0):
                     w[layer, n_post, layer, n_pre] = weight
 
     return w.reshape(layer_post * neurons_post, layer_pre * neurons_pre)
+
+
+def StrThal_Pallidal_Connection(preDim, postDim, weight=1.0):
+
+    if not isinstance(postDim,  tuple | list):
+        raise AttributeError
+
+    i, j = postDim
+    w = np.array([[[None]*preDim]*j]*i)
+
+    for pre_i in range(preDim):
+        for post_i in range(i):
+            w[post_i, pre_i, pre_i] = weight
+
+    return w.reshape(i*j, preDim)
 
 
 # TODO: implement this function as the connector between PM and Striatum D1 in the dorsolateral network

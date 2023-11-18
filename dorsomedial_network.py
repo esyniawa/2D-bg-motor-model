@@ -1,9 +1,10 @@
 import ANNarchy as ann
+from ANNarchy.extensions.convolution import Pooling
 import numpy as np
 
 from model_definitions import *
 from parameters import model_params
-from projections import STN_GPi_connection, laterals_layerwise, S1_STN_connection
+from projections import STN_GPi_connection, laterals_layerwise, S1_STN_connection, StrThal_Pallidal_Connection
 
 baseline_dopa_caud = 0.1
 
@@ -43,7 +44,7 @@ VA = ann.Population(name="VA", geometry=model_params['dim_medial_BG'], neuron=Li
 VA.noise = 0.025
 VA.baseline = 1.0
 
-StrThal_caud = ann.Population(name="StrThal_caud", geometry=model_params['dim_medial_BG'], neuron=LinearNeuron)
+StrThal_caud = ann.Population(name="StrThal_caud", geometry=model_params['num_forearm_points'], neuron=LinearNeuron)
 StrThal_caud.noise = 0.01
 StrThal_caud.baseline = 0.4
 
@@ -151,14 +152,21 @@ StrD1SNc_caud.connect_all_to_all(weights=0.0)
 StrD1SNc_caud.tau = 3000
 
 # FB connections (all weights not fitted)
-VAStrThal = ann.Projection(pre=VA, post=StrThal_caud, target='exc', name='VAStrThal')
-VAStrThal.connect_one_to_one(weights=1.0)
+VAStrThal = Pooling(pre=VA, post=StrThal_caud, target='exc', name='VAStrThal', operation='max')
+VAStrThal.connect_pooling(extent=(1, model_params['num_forearm_points']))
 
+# weights
+weights_StrThal_GPi = StrThal_Pallidal_Connection(preDim=model_params['num_forearm_points'],
+                                                  postDim=model_params['dim_medial_BG'],
+                                                  weight=0.1)
 StrThalGPi_caud = ann.Projection(pre=StrThal_caud, post=GPi_caud, target='inh', name='StrThalGPi_caud')
-StrThalGPi_caud.connect_one_to_one(weights=0.1)
+StrThalGPi_caud.connect_from_matrix(weights_StrThal_GPi)
 
+weights_StrThal_GPe = StrThal_Pallidal_Connection(preDim=model_params['num_forearm_points'],
+                                                  postDim=model_params['dim_medial_BG'],
+                                                  weight=0.5)
 StrThalGPe_caud = ann.Projection(pre=StrThal_caud, post=GPe_caud, target='inh', name='StrThalGPe_caud')
-StrThalGPe_caud.connect_one_to_one(weights=0.5)
+StrThalGPe_caud.connect_from_matrix(weights_StrThal_GPe)
 
 # Lateral connections
 # Striatum
@@ -168,11 +176,15 @@ StrD2StrD2_caud.connect_all_to_all(weights=0.1)
 StrD1StrD1_caud = ann.Projection(pre=StrD1_caud, post=StrD1_caud, target='inh')
 StrD1StrD1_caud.connect_all_to_all(weights=0.4)
 
+StrThalStrThal_caud = ann.Projection(pre=StrThal_caud, post=StrThal_caud, target='inh')
+StrThalStrThal_caud.connect_all_to_all(weights=0.2) #0.5
+
+# Thalamus
+VAVA = ann.Projection(pre=VA, post=VA, target='inh')
+VAVA.connect_all_to_all(0.4)
+
 # other laterals layerwise
 w_caud_laterals = laterals_layerwise(preDim=model_params['dim_medial_BG'], postDim=model_params['dim_medial_BG'])
-
-StrThalStrThal_caud = ann.Projection(pre=StrThal_caud, post=StrThal_caud, target='inh')
-StrThalStrThal_caud.connect_from_matrix(0.3 * w_caud_laterals) #0.5
 
 GPiGPi = ann.Projection(pre=GPi_caud, post=GPi_caud, target='exc', synapse=ReversedSynapse)
 GPiGPi.connect_from_matrix(0.15 * w_caud_laterals)
@@ -181,6 +193,4 @@ GPiGPi.reversal = 0.4
 GPeGPe = ann.Projection(pre=GPe_caud, post=GPe_caud, target='inh')
 GPeGPe.connect_from_matrix(0.1 * w_caud_laterals)
 
-VAVA = ann.Projection(pre=VA, post=VA, target='inh')
-VAVA.connect_all_to_all(0.4)
 
