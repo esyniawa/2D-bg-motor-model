@@ -228,7 +228,7 @@ def train_motor_network(simID,
                         state_space,
                         possible_trajectories,
                         VA_amp=model_params['exc_VA'] ,
-                        num_goals=model_params['num_goals'],
+                        num_tactile_points=model_params['num_forearm_points'],
                         num_layers=model_params['num_init_positions'],
                         max_training_trials=20,
                         max_correct=2,
@@ -258,10 +258,10 @@ def train_motor_network(simID,
         if monitoring_training:
             pop_monitors.start()
 
-        for goal in range(num_goals):
+        for point in range(num_tactile_points):
 
-            VA_input = np.zeros(num_goals)
-            VA_input[goal] = VA_amp
+            VA_input = np.zeros(num_tactile_points)
+            VA_input[point] = VA_amp
 
             n_trials = 0
             n_correct = 0
@@ -280,11 +280,11 @@ def train_motor_network(simID,
                 if not correct and M1_id is not None:
                     false_trajectories.append(M1_id)
 
-                error_history.append((goal, error_distance))
+                error_history.append((point, error_distance))
                 n_correct += correct
                 n_trials += 1
 
-                print(f'Goal: {goal} | Training_trial: {n_trials} | Correct: {n_correct}')
+                print(f'Tactile point: {point} | Training_trial: {n_trials} | Correct: {n_correct}')
 
         # save monitors
         if monitoring_training:

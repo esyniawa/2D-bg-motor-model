@@ -43,8 +43,9 @@ state_space_limits = {
 model_params = {}
 
 # relative positions of the goal on the forearm
-model_params['rel_position_goal'] = (0.25, 0.5, 0.75)   # must be <= 1.0
-model_params['num_goals'] = len(model_params['rel_position_goal'])
+model_params['num_goals'] = 1
+model_params['rel_position_goal'] = np.arange(start=0, stop=1.01, step=0.2)   # must be <= 1.0
+model_params['num_forearm_points'] = len(model_params['rel_position_goal'])
 
 # moving arm parameters
 model_params['moving_arm'] = 'right'
@@ -77,7 +78,7 @@ model_params['test_set'] = ((0, 0),
 
 # dorsomedial
 model_params['dim_medial_Str'] = (5, 5)
-model_params['dim_medial_BG'] = (model_params['num_init_positions'], model_params['num_goals'])
+model_params['dim_medial_BG'] = (model_params['num_init_positions'], model_params['num_forearm_points'])
 
 model_params['exc_dPFC'] = 1.0
 model_params['exc_S1'] = 1.0
@@ -88,7 +89,7 @@ model_params['sd_distance_RBF_S1STN'] = 100 # in [mm]
 model_params['num_trajectories'] = 16
 
 # projection between VA and PM
-model_params['bivariate_gauss_sigma'] = 30
+model_params['bivariate_gauss_sigma'] = 15
 model_params['dim_lateral_BG'] = (model_params['num_init_positions'], model_params['num_trajectories'])
 # Threshold that M1 has to exceed to disable learning via motor babbling
 model_params['threshold_M1r'] = 0.2

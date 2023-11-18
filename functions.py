@@ -44,9 +44,9 @@ def gauss_wrapper(func, sigma=model_params['sd_distance_RBF_S1STN']):
     return wrapper
 
 
-def goal_coordinates(arm=model_params['resting_arm'],
-                     resting_arm_angles=model_params['resting_arm_positions'],
-                     rel_forearm_tactile_points=model_params['rel_position_goal']):
+def tactile_coordinates(arm=model_params['resting_arm'],
+                        resting_arm_angles=model_params['resting_arm_positions'],
+                        rel_forearm_tactile_points=model_params['rel_position_goal']):
 
     from forward_kinematic import return_tactile_point
 
@@ -64,20 +64,20 @@ def goal_coordinates(arm=model_params['resting_arm'],
     return coordinates_pos
 
 
-def min_space_between_goals():
-    """ This function returns the minimal distance between different possible goal positions. The minimal value
+def min_space_between_tactile_points():
+    """ This function returns the minimal distance between different possible tactile positions. The minimal value
         should than be used to adjust the step size in creating the state space."""
 
     from itertools import combinations
 
-    goal_coord = goal_coordinates()
+    tactile_coord = tactile_coordinates()
 
     # flatten array to just coordinates
-    goal_coord = goal_coord.reshape((goal_coord.shape[0] * goal_coord.shape[1], 2))
+    tactile_coord = tactile_coord.reshape((tactile_coord.shape[0] * tactile_coord.shape[1], 2))
 
     # get every combination of coordinates without duplicates
-    x_combinations = np.array(list(combinations(np.unique(goal_coord[:, 0]), 2)))
-    y_combinations = np.array(list(combinations(np.unique(goal_coord[:, 1]), 2)))
+    x_combinations = np.array(list(combinations(np.unique(tactile_coord[:, 0]), 2)))
+    y_combinations = np.array(list(combinations(np.unique(tactile_coord[:, 1]), 2)))
 
     x_distances = np.abs(x_combinations[:, 0] - x_combinations[:, 1])
     y_distances = np.abs(y_combinations[:, 0] - y_combinations[:, 1])
@@ -92,7 +92,7 @@ def create_state_space(x_bound=state_space_limits['x_boundaries'],
     x_lowerbound, x_upperbound = x_bound
     y_lowerbound, y_upperbound = y_bound
 
-    step_size_x, step_size_y = min_space_between_goals()
+    step_size_x, step_size_y = min_space_between_tactile_points()
 
     x = np.arange(start=x_lowerbound, stop=x_upperbound+step_size_x, step=np.ceil(resolution_factor * step_size_x))
     y = np.arange(start=y_lowerbound, stop=y_upperbound+step_size_y, step=np.ceil(resolution_factor * step_size_y))
@@ -103,19 +103,19 @@ def create_state_space(x_bound=state_space_limits['x_boundaries'],
     return xy
 
 
-def return_goal_indeces():
-    goal_coord = goal_coordinates()
+def return_tactile_indeces():
+    tactile_coord = tactile_coordinates()
     state_space = create_state_space()
 
-    num_angles, num_tactile_points, _ = goal_coord.shape
+    num_angles, num_tactile_points, _ = tactile_coord.shape
 
     goal_indeces = np.zeros((num_angles, num_tactile_points, 2))
     for i_angle in range(num_angles):
         for j_goal in range(num_tactile_points):
             # find min in x
-            goal_indeces[i_angle, j_goal, 0] = np.argmin(np.abs(state_space[0, :, 0] - goal_coord[i_angle, j_goal, 0]))
+            goal_indeces[i_angle, j_goal, 0] = np.argmin(np.abs(state_space[0, :, 0] - tactile_coord[i_angle, j_goal, 0]))
             # find min in y
-            goal_indeces[i_angle, j_goal, 1] = np.argmin(np.abs(state_space[:, 0, 1] - goal_coord[i_angle, j_goal, 1]))
+            goal_indeces[i_angle, j_goal, 1] = np.argmin(np.abs(state_space[:, 0, 1] - tactile_coord[i_angle, j_goal, 1]))
 
     return goal_indeces.astype(int)
 
@@ -135,11 +135,12 @@ def create_trajectories(num=model_params['num_trajectories'],
         np.random.seed()
 
     state_space = create_state_space()
-    goal_ids = return_goal_indeces() # [y, x]
-    goal_trajectories = np.zeros((model_params['num_init_positions'], model_params['num_goals'], 2))
+    tactile_ids = return_tactile_indeces() # [y, x]
+    # [num init positions, num tactile points, (theta shoulder, theta elbow)]
+    tactile_trajectories = np.zeros((model_params['num_init_positions'], model_params['num_forearm_points'], 2))
 
     # add deriviates of theta
-    for i, init_pos in enumerate(goal_ids):
+    for i, init_pos in enumerate(tactile_ids):
         for j, goal_id in enumerate(init_pos):
             coordinate = state_space[goal_id[1], goal_id[0], :]
             new_theta, _ = inverse_kinematic_gradient_decent(end_effector=coordinate,
@@ -147,11 +148,11 @@ def create_trajectories(num=model_params['num_trajectories'],
                                                              arm=model_params['moving_arm'],
                                                              radians=False)
 
-            goal_trajectories[i, j, :] = new_theta - np.radians(model_params['moving_arm_positions'][i])
+            tactile_trajectories[i, j, :] = new_theta - np.radians(model_params['moving_arm_positions'][i])
 
     # add other trajectories
     other_trajectories = np.zeros((model_params['num_init_positions'], num - model_params['num_goals'], 2))
-    for m, init_pos in enumerate(goal_ids):
+    for m, init_pos in enumerate(tactile_ids):
         for n in range(other_trajectories.shape[1]):
             check_min_distance = True
 
@@ -176,7 +177,7 @@ def create_trajectories(num=model_params['num_trajectories'],
                     other_trajectories[m, n, :] = new_theta - np.radians(model_params['moving_arm_positions'][m])
                     check_min_distance = False
 
-    trajectories = np.hstack((goal_trajectories, other_trajectories))
+    trajectories = np.hstack((tactile_trajectories, other_trajectories))
     # shuffle trajectories
     [np.random.shuffle(x) for x in trajectories]
 
@@ -249,6 +250,4 @@ if __name__ == '__main__':
 
     bivariate_gauss([5, 8], 20.0, plot=True)
 
-    print(create_trajectories(10, 10, 10))
-
-
+    print(create_state_space().shape)
