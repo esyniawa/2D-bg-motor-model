@@ -94,14 +94,39 @@ def construct_arms(theta_right, theta_left, radians=True, do_plot=True):
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
-    from parameters import model_params
+    from parameters import model_params, state_space_limits
+    from inverse_kinematic import inverse_kinematic_gradient_decent
+    from functions import bivariate_gauss, return_tactile_indeces, tactile_coordinates
+    import os
 
     from colour import Color
 
     nthetas = len(model_params['resting_arm_positions'])
+    arm_id = 2
+    resting_theta = model_params['resting_arm_positions'][arm_id]
+    moving_theta = model_params['resting_arm_positions'][arm_id]
+    goal = tactile_coordinates()[2, 3]
 
-    blue = Color("blue")
-    colors = list(blue.range_to(Color("green"), nthetas))
+    min_x, max_x = state_space_limits['x_boundaries']
+
+    n = 40
+    min_shoulder, min_elbow = model_params['resting_arm_positions'][0]
+    max_shoulder, max_elbow = model_params['resting_arm_positions'][-1]
+
+    shoulder_theta = np.linspace(min_shoulder,
+                                 max_shoulder, n)
+
+    elbow_theta = np.linspace(min_elbow,
+                              max_elbow, n)
+
+    thetas = np.dstack((shoulder_theta, elbow_theta)).reshape((n, 2))
+
+    dist_colors = list(Color("#ffffff").range_to(Color("#cc0000"), int(n/2)))
+
+    dist_colors = dist_colors + [Color("#cc0000")] + dist_colors[::-1]
+
+    green = Color("#2eb82e")
+    colors = list(green.range_to(Color("#006600"), nthetas))
 
     fig, ax = plt.subplots()
     for i, theta_left in enumerate(model_params['resting_arm_positions']):
@@ -109,19 +134,89 @@ if __name__ == '__main__':
         coor_right, coor_left = construct_arms(model_params['moving_arm_positions'][i], theta_left,
                                                radians=False, do_plot=False)
 
-        if i == 2:
+        if i == arm_id:
             tact_points = [return_tactile_point(theta_left, 'left', percentile=per, radians=False) for per in model_params['rel_position_goal']]
             for tact_point in tact_points:
-                ax.scatter(tact_point[0], tact_point[1], c='r', zorder=2)
+                ax.scatter(tact_point[0], tact_point[1], c='black', s=40, zorder=2)
 
-            ax.plot(coor_right[0, :], coor_right[1, :], color=colors[i].hex, linewidth=3.0, zorder=1)
-            ax.plot(coor_left[0, :], coor_left[1, :], color=colors[i].hex, linewidth=3.0, zorder=1)
+            ax.plot(coor_right[0, :], coor_right[1, :], color=colors[i].hex, linewidth=5.0, zorder=1, alpha=0.4)
+            ax.plot(coor_left[0, :], coor_left[1, :], color=colors[i].hex, linewidth=5.0, zorder=1)
 
         else:
-            ax.plot(coor_right[0, :], coor_right[1, :], color=colors[i].hex, linestyle='dashed', zorder=0)
+            ax.plot(coor_right[0, :], coor_right[1, :], color=colors[i].hex, linestyle='dashed', zorder=0, alpha=0.4)
             ax.plot(coor_left[0, :], coor_left[1, :], color=colors[i].hex, linestyle='dashed', zorder=0)
 
-        plt.ylabel('y in [mm]', fontsize=16)
-        plt.xlabel('x in [mm]', fontsize=16)
+    for c, theta in enumerate(thetas):
+        point = forward_kinematic_arm(theta, 'left', radians=False, return_all_joint_coordinates=False)
+        ax.scatter(point[0], point[1], zorder=0, c=dist_colors[c].hex, s=10)
+
+    ax.set_xlim(state_space_limits['x_boundaries'])
+    ax.set_ylim(state_space_limits['y_boundaries'])
+
+    plt.ylabel('y in [mm]', fontsize=16)
+    plt.xlabel('x in [mm]', fontsize=16)
+
+    folder = 'figures/'
+    if not os.path.exists(folder):
+        os.mkdir(folder)
+    plt.savefig(folder + 'positions.png')
 
     plt.show()
+    plt.close()
+
+    # Plot touch point and visual fixation
+    fig, ax = plt.subplots()
+
+    y, x = return_tactile_indeces()[arm_id, 3]
+    map1 = bivariate_gauss([x, y], 50, norm=True)
+    map1[map1 < 0.01] = np.NaN
+
+    map2 = 2*bivariate_gauss([x-5, y-5], 100, norm=True)
+    map2[map2 < 0.01] = np.NaN
+
+    coor_right, coor_left = construct_arms(moving_theta, resting_theta, radians=False, do_plot=False)
+
+    ax.plot(coor_right[0, :], coor_right[1, :], color=colors[i].hex, linewidth=5.0, zorder=2, alpha=0.3)
+    ax.plot(coor_left[0, :], coor_left[1, :], color=colors[i].hex, linewidth=5.0, zorder=2, alpha=0.3)
+
+    ax.set_xlim(state_space_limits['x_boundaries'])
+    ax.set_ylim(state_space_limits['y_boundaries'])
+    plt.ylabel('y in [mm]', fontsize=16)
+    plt.xlabel('x in [mm]', fontsize=16)
+
+    ax.contourf(map1, cmap='Blues', origin='lower', zorder=2, vmin=0.0, vmax=1.0,
+                extent=state_space_limits['x_boundaries'] + state_space_limits['y_boundaries'],
+                alpha=0.4)
+
+    ax.contourf(map2, cmap='Reds', origin='lower', zorder=1, vmin=0.0, vmax=1.0,
+                extent=state_space_limits['x_boundaries'] + state_space_limits['y_boundaries'],
+                alpha=0.6)
+
+    plt.savefig(folder + 'premotor.png')
+    plt.show()
+    plt.close()
+
+    # motor plan
+    fig, ax = plt.subplots()
+
+    ax.plot(coor_right[0, :], coor_right[1, :], color=colors[arm_id].hex, linewidth=3.0, zorder=1, alpha=0.3, linestyle='dashed')
+    ax.plot(coor_left[0, :], coor_left[1, :], color=colors[arm_id].hex, linewidth=5.0, zorder=1, alpha=0.3)
+
+    new_theta, trajectory = inverse_kinematic_gradient_decent(goal, starting_angles=moving_theta, arm='right', radians=False)
+    new_position = forward_kinematic_arm(new_theta, 'right', radians=True, return_all_joint_coordinates=True)
+
+    ax.plot(new_position[0, :], new_position[1, :], color=colors[arm_id].hex, linewidth=5.0, zorder=2)
+    ax.scatter(trajectory[:, 0], trajectory[:, 1], zorder=0, c='b', s=10)
+
+    ax.set_xlim(state_space_limits['x_boundaries'])
+    ax.set_ylim(state_space_limits['y_boundaries'])
+    plt.ylabel('y in [mm]', fontsize=16)
+    plt.xlabel('x in [mm]', fontsize=16)
+
+    ax.contourf(map2, cmap='Reds', origin='lower', zorder=2, vmin=0.0, vmax=1.0,
+                extent=state_space_limits['x_boundaries'] + state_space_limits['y_boundaries'],
+                alpha=0.5)
+
+    plt.savefig(folder + 'movement_plan.png')
+    plt.show()
+    plt.close()

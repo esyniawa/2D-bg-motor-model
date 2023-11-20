@@ -34,7 +34,7 @@ joint_limits = {
 
 state_space_limits = {
     'x_boundaries': (-300, 300),
-    'y_boundaries': (0, 200)
+    'y_boundaries': (-10, 210)
 }
 
 #############################################
