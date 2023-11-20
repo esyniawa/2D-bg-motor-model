@@ -93,4 +93,35 @@ def construct_arms(theta_right, theta_left, radians=True, do_plot=True):
 
 
 if __name__ == '__main__':
-    a = construct_arms(theta_right=[20, 110], theta_left=[20, 90], radians=False, do_plot=True)
+    import matplotlib.pyplot as plt
+    from parameters import model_params
+
+    from colour import Color
+
+    nthetas = len(model_params['resting_arm_positions'])
+
+    blue = Color("blue")
+    colors = list(blue.range_to(Color("green"), nthetas))
+
+    fig, ax = plt.subplots()
+    for i, theta_left in enumerate(model_params['resting_arm_positions']):
+
+        coor_right, coor_left = construct_arms(model_params['moving_arm_positions'][i], theta_left,
+                                               radians=False, do_plot=False)
+
+        if i == 2:
+            tact_points = [return_tactile_point(theta_left, 'left', percentile=per, radians=False) for per in model_params['rel_position_goal']]
+            for tact_point in tact_points:
+                ax.scatter(tact_point[0], tact_point[1], c='r', zorder=2)
+
+            ax.plot(coor_right[0, :], coor_right[1, :], color=colors[i].hex, linewidth=3.0, zorder=1)
+            ax.plot(coor_left[0, :], coor_left[1, :], color=colors[i].hex, linewidth=3.0, zorder=1)
+
+        else:
+            ax.plot(coor_right[0, :], coor_right[1, :], color=colors[i].hex, linestyle='dashed', zorder=0)
+            ax.plot(coor_left[0, :], coor_left[1, :], color=colors[i].hex, linestyle='dashed', zorder=0)
+
+        plt.ylabel('y in [mm]', fontsize=16)
+        plt.xlabel('x in [mm]', fontsize=16)
+
+    plt.show()

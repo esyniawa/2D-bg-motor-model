@@ -47,19 +47,19 @@ model_params['num_goals'] = 1
 model_params['rel_position_goal'] = np.arange(start=0, stop=1.01, step=0.2)   # must be <= 1.0
 model_params['num_forearm_points'] = len(model_params['rel_position_goal'])
 
-# moving arm parameters
-model_params['moving_arm'] = 'right'
-# joint angles in [°]
-model_params['moving_arm_positions'] = ((0, 90),
-                                        (10, 100),
-                                        (20, 110))
-
 # resting arm positions
 model_params['resting_arm'] = 'left'
 # joint angles in [°] (the left arm will be touched)
 model_params['resting_arm_positions'] = ((0, 90),
                                          (10, 100),
-                                         (20, 110))
+                                         (20, 110),
+                                         (30, 120),
+                                         (40, 130))
+
+# moving arm parameters
+model_params['moving_arm'] = 'right'
+# joint angles in [°]
+model_params['moving_arm_positions'] = model_params['resting_arm_positions'][::-1]
 
 # number of initial positions
 model_params['num_init_positions'] = len(model_params['moving_arm_positions'])
