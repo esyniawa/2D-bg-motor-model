@@ -104,7 +104,7 @@ if __name__ == '__main__':
     nthetas = len(model_params['resting_arm_positions'])
     arm_id = 2
     resting_theta = model_params['resting_arm_positions'][arm_id]
-    moving_theta = model_params['resting_arm_positions'][arm_id]
+    moving_theta = model_params['moving_arm_positions'][arm_id]
     goal = tactile_coordinates()[2, 3]
 
     min_x, max_x = state_space_limits['x_boundaries']

@@ -135,6 +135,7 @@ def create_trajectories(num=model_params['num_trajectories'],
         np.random.seed()
 
     state_space = create_state_space()
+
     tactile_ids = return_tactile_indeces() # [y, x]
     # [num init positions, num tactile points, (theta shoulder, theta elbow)]
     tactile_trajectories = np.zeros((model_params['num_init_positions'], model_params['num_forearm_points'], 2))
@@ -151,7 +152,7 @@ def create_trajectories(num=model_params['num_trajectories'],
             tactile_trajectories[i, j, :] = new_theta - np.radians(model_params['moving_arm_positions'][i])
 
     # add other trajectories
-    other_trajectories = np.zeros((model_params['num_init_positions'], num - model_params['num_goals'], 2))
+    other_trajectories = np.zeros((model_params['num_init_positions'], num - model_params['num_forearm_points'], 2))
     for m, init_pos in enumerate(tactile_ids):
         for n in range(other_trajectories.shape[1]):
             check_min_distance = True
@@ -166,7 +167,7 @@ def create_trajectories(num=model_params['num_trajectories'],
 
                 # check if the random point is far enough from the goals
                 coordinates = np.tile(random_point, (model_params['num_goals'], 1))
-                distances = np.linalg.norm(coordinates - state_space[init_pos[:, 0], init_pos[:, 1], :], axis=1)
+                distances = np.linalg.norm(coordinates - state_space[init_pos[:, 1], init_pos[:, 0], :], axis=1)
 
                 if np.min(distances) > min_distance_to_goal:
                     new_theta, _ = inverse_kinematic_gradient_decent(end_effector=random_point,

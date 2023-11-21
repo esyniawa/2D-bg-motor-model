@@ -278,11 +278,73 @@ def check_limits(thetas, radians=True):
     return ret
 
 
+def plot_trajectories(arm_id, tactile_id, save_plot=False):
+    import matplotlib.pyplot as plt
+    import os
+    from colour import Color
+    from functions import bivariate_gauss, return_tactile_indeces, create_trajectories
+    from forward_kinematic import construct_arms, forward_kinematic_arm
+    from parameters import model_params, state_space_limits
+
+    min_x, max_x = state_space_limits['x_boundaries']
+    min_y, max_y = state_space_limits['y_boundaries']
+
+    nthetas = len(model_params['resting_arm_positions'])
+    resting_theta = model_params['resting_arm_positions'][arm_id]
+    moving_theta = model_params['moving_arm_positions'][arm_id]
+    mycolor = list(Color("#2eb82e").range_to(Color("#006600"), nthetas))[arm_id]
+
+    delta_thetas = create_trajectories(fix_seed=False)[arm_id, :, :]
+    y, x = return_tactile_indeces()[arm_id, tactile_id]
+
+    gauss_map = bivariate_gauss([x, y], 50, norm=True)
+    gauss_map[gauss_map < 0.01] = np.NaN
+
+    coor_right, coor_left = construct_arms(moving_theta, resting_theta, radians=False, do_plot=False)
+
+    fig = plt.figure(f'Trajectories', figsize=(15, 10))
+    for i, delta_theta in enumerate(delta_thetas):
+
+        new_theta = np.radians(moving_theta) + delta_theta
+        new_position_arm = forward_kinematic_arm(thetas=new_theta, arm=model_params['moving_arm'],
+                                                 return_all_joint_coordinates=True, radians=True)
+
+        plt.subplot(4, 4, i+1)
+
+        plt.plot(coor_right[0, :], coor_right[1, :], color=mycolor.hex, linewidth=5.0, zorder=1, alpha=0.3)
+        plt.plot(coor_left[0, :], coor_left[1, :], color=mycolor.hex, linewidth=5.0, zorder=1, alpha=0.3)
+
+        plt.plot(new_position_arm[0, :], new_position_arm[1, :], color=mycolor.hex, linewidth=5.0, zorder=2)
+
+        ax = fig.gca()
+        ax.set_xlim([min_x, max_x])
+        ax.set_ylim([min_y, max_y])
+        if i % 4 == 0:
+            plt.ylabel('y in [mm]', fontsize=16)
+
+        if i >= 12:
+            plt.xlabel('x in [mm]', fontsize=16)
+
+        plt.contourf(gauss_map, cmap='Reds', origin='lower', zorder=0, vmin=0.0, vmax=1.0,
+                     extent=[min_x, max_x, min_y, max_y],
+                     alpha=0.6)
+
+    if save_plot:
+        folder = 'figures/'
+        if not os.path.exists(folder):
+            os.mkdir(folder)
+            
+        plt.savefig(folder + 'trajectories.pdf')
+    plt.show()
+
+
 if __name__ == '__main__':
-    test_inverse_kinematic = True
+    test_inverse_kinematic = False
     test_self_touch = False
     test_bads = False
     test_distance = False
+
+    plot_mb = True
 
     if test_inverse_kinematic:
         a = inverse_kinematic_gradient_decent(end_effector=[-100, 150],
@@ -317,3 +379,6 @@ if __name__ == '__main__':
             num=10,
             radians=False,
             delta_shoulder=0)
+
+    if plot_mb:
+        plot_trajectories(2, 3, save_plot=True)
