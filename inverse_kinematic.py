@@ -278,7 +278,7 @@ def check_limits(thetas, radians=True):
     return ret
 
 
-def plot_trajectories(arm_id, tactile_id, save_plot=False):
+def plot_trajectories(arm_id, tactile_id, save_plot=False, fix_seed=False):
     import matplotlib.pyplot as plt
     import os
     from colour import Color
@@ -294,10 +294,10 @@ def plot_trajectories(arm_id, tactile_id, save_plot=False):
     moving_theta = model_params['moving_arm_positions'][arm_id]
     mycolor = list(Color("#2eb82e").range_to(Color("#006600"), nthetas))[arm_id]
 
-    delta_thetas = create_trajectories(fix_seed=False)[arm_id, :, :]
+    delta_thetas = create_trajectories(fix_seed=fix_seed)[arm_id, :, :]
     y, x = return_tactile_indeces()[arm_id, tactile_id]
 
-    gauss_map = bivariate_gauss([x, y], 50, norm=True)
+    gauss_map = bivariate_gauss([x, y], 100, norm=True)
     gauss_map[gauss_map < 0.01] = np.NaN
 
     coor_right, coor_left = construct_arms(moving_theta, resting_theta, radians=False, do_plot=False)
@@ -329,11 +329,12 @@ def plot_trajectories(arm_id, tactile_id, save_plot=False):
                      extent=[min_x, max_x, min_y, max_y],
                      alpha=0.6)
 
+
     if save_plot:
         folder = 'figures/'
         if not os.path.exists(folder):
             os.mkdir(folder)
-            
+
         plt.savefig(folder + 'trajectories.pdf')
     plt.show()
 
@@ -381,4 +382,4 @@ if __name__ == '__main__':
             delta_shoulder=0)
 
     if plot_mb:
-        plot_trajectories(2, 3, save_plot=True)
+        plot_trajectories(2, 3, save_plot=True, fix_seed=True)

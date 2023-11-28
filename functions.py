@@ -130,7 +130,7 @@ def create_trajectories(num=model_params['num_trajectories'],
     from parameters import model_params
 
     if fix_seed:
-        np.random.seed(2)
+        np.random.seed(214)
     else:
         np.random.seed()
 
